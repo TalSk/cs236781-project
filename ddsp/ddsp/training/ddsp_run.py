@@ -65,9 +65,9 @@ import time
 from absl import app
 from absl import flags
 from absl import logging
-from ddsp.training import eval_util
-from ddsp.training import models
-from ddsp.training import train_util
+from ..training import eval_util
+from ..training import models
+from ..training import train_util
 import gin
 import pkg_resources
 import tensorflow.compat.v2 as tf
