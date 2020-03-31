@@ -10,6 +10,8 @@
 
 - Using a datset of music originating from 3 monophonic sources; drums, bass and vocals and their combined output, we trained a deterministic autoencoder as presented in the original paper as a baseline for each source, as well as Conv-TasNet to seperate incoming audio to the fundamental frequencies. Combined together they create a full network that is theoretically capable of audio seperation on these exact sources.
 
+- State key results.
+
 ==Intro (25%). Review the papers relevant to your project. Explain the problem domain, existing approaches and the specific contribution of the relevant paper(s). Also detail the drawbacks which you plan to address. If it’s a custom project, explain your specific motivation and goals. Cite any other work as needed.
 
 - General review of DDSP.
@@ -29,6 +31,7 @@
 - Describe the dataset (Explain theoritically why it is required the sources to be monophonic, and it should be the same creator, for now. Explain how empirically it is supposed to be enough, according to the original paper where they used just 13 minutes to train).
 	Include explanation of the audio preprocessing process.
 
+
 ==Implementation and experiments (20%). Describe the experiments performed and their configurations, what was compared to what and the evaluation metrics used and why. Explain all implementation details such as model architectures used, data preprocessing/augmentation approaches, loss formulations, training methods and hyperparameter values.
 
 Note: You can use existing code, e.g. in your implementation but specify what you used and which parts you implemented yourself.
@@ -41,6 +44,7 @@ Note: You can use existing code, e.g. in your implementation but specify what yo
 	Loudness L1 distance (for the TasNet)
 	F0  L1 distance (for the TasNet)
 	The article's mentioned multi-scale spectal loss (for the whole per-instrument reconstruction)
+	CREPE's binary cross entroy loss
 
 - Show experiments to check how well the job was done.
 	Possible test cases:
