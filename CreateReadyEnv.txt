@@ -1,7 +1,16 @@
 conda create --name ddsp python=3.7
 conda activate ddsp
-conda install -c conda-forge tensorflow
+conda install jupyterlab
+
+# libsnd installation:
+# For windows:
 conda install -c msys2 m2w64-libsndfile
-conda install ipython
+# For linux:
+sudo apt-get install libsndfile-dev
+OR
+conda install -c conda-forge libsndfile
+
 pip install --upgrade pip
+pip install apache_beam
+sudo apt-get install ffmpeg libavcodec-extra
 pip install --upgrade ddsp
