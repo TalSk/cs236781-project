@@ -176,8 +176,7 @@ class Solver(object):
                 mixture_lengths = mixture_lengths.cuda()
                 padded_source = padded_source.cuda()
             estimated_f0, estimated_loudness = self.model(padded_mixture)
-            loss, max_snr, estimate_source, reorder_estimate_source = \
-                cal_loss(padded_source, estimated_f0, estimated_loudness, mixture_lengths)
+            loss, loss_f0, loss_loudness = cal_loss(padded_source, estimated_f0, estimated_loudness, mixture_lengths)
             if not cross_valid:
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -189,9 +188,9 @@ class Solver(object):
 
             if i % self.print_freq == 0:
                 print('Epoch {0} | Iter {1} | Average Loss {2:.3f} | '
-                      'Current Loss {3:.6f} | {4:.1f} ms/batch'.format(
+                      'Current Loss {3:.6f} | F0 Loss {3:.6f} | Loudness Loss {3:.6f} | {4:.1f} ms/batch'.format(
                           epoch + 1, i + 1, total_loss / (i + 1),
-                          loss.item(), 1000 * (time.time() - start) / (i + 1)),
+                          loss.item(), loss_f0.item(), loss_loudness.item(), 1000 * (time.time() - start) / (i + 1)),
                       flush=True)
 
             # visualizing loss using visdom

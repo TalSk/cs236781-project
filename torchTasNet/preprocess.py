@@ -9,7 +9,7 @@ import os
 import librosa
 
 
-def preprocess_one_dir(in_dir, out_dir, out_filename, sample_rate=8000):
+def preprocess_one_dir(in_dir, out_dir, out_filename, sample_rate=16000):
     file_infos = []
     in_dir = os.path.abspath(in_dir)
     wav_list = os.listdir(in_dir)
@@ -27,7 +27,7 @@ def preprocess_one_dir(in_dir, out_dir, out_filename, sample_rate=8000):
 
 def preprocess(args):
     for data_type in ['tr', 'cv', 'tt']:
-        for speaker in ['mix', 's1', 's2']:
+        for speaker in ['mix', 's1', 's2', 's3']:
             preprocess_one_dir(os.path.join(args.in_dir, data_type, speaker),
                                os.path.join(args.out_dir, data_type),
                                speaker,
@@ -40,7 +40,7 @@ if __name__ == "__main__":
                         help='Directory path of wsj0 including tr, cv and tt')
     parser.add_argument('--out-dir', type=str, default=None,
                         help='Directory path to put output files')
-    parser.add_argument('--sample-rate', type=int, default=8000,
+    parser.add_argument('--sample-rate', type=int, default=16000,
                         help='Sample rate of audio file')
     args = parser.parse_args()
     print(args)

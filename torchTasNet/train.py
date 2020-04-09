@@ -30,7 +30,7 @@ parser.add_argument('--cv_maxlen', default=8, type=float,
 # Network architecture
 parser.add_argument('--N', default=256, type=int,
                     help='Number of filters in autoencoder')
-parser.add_argument('--L', default=20, type=int,
+parser.add_argument('--L', default=1024, type=int,
                     help='Length of the filters in samples (40=2.5ms at 16kHZ)')
 parser.add_argument('--B', default=256, type=int,
                     help='Number of channels in bottleneck 1 × 1-conv block')

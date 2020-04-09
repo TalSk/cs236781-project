@@ -31,7 +31,7 @@ import librosa
 
 class AudioDataset(data.Dataset):
 
-    def __init__(self, json_dir, batch_size, sample_rate=8000, segment=4.0, cv_maxlen=8.0):
+    def __init__(self, json_dir, batch_size, sample_rate=16000, segment=4.0, cv_maxlen=8.0):
         """
         Args:
             json_dir: directory including mix.json, s1.json and s2.json
@@ -43,18 +43,22 @@ class AudioDataset(data.Dataset):
         mix_json = os.path.join(json_dir, 'mix.json')
         s1_json = os.path.join(json_dir, 's1.json')
         s2_json = os.path.join(json_dir, 's2.json')
+        s3_json = os.path.join(json_dir, 's3.json')
         with open(mix_json, 'r') as f:
             mix_infos = json.load(f)
         with open(s1_json, 'r') as f:
             s1_infos = json.load(f)
         with open(s2_json, 'r') as f:
             s2_infos = json.load(f)
+        with open(s3_json, 'r') as f:
+            s3_infos = json.load(f)
         # sort it by #samples (impl bucket)
         def sort(infos): return sorted(
             infos, key=lambda info: int(info[1]), reverse=True)
         sorted_mix_infos = sort(mix_infos)
         sorted_s1_infos = sort(s1_infos)
         sorted_s2_infos = sort(s2_infos)
+        sorted_s3_infos = sort(s3_infos)
         if segment >= 0.0:
             # segment length and count dropped utts
             segment_len = int(segment * sample_rate)  # 4s * 8000/s = 32000 samples
@@ -71,7 +75,7 @@ class AudioDataset(data.Dataset):
             while True:
                 num_segments = 0
                 end = start
-                part_mix, part_s1, part_s2 = [], [], []
+                part_mix, part_s1, part_s2, part_s3 = [], [], [], []
                 while num_segments < batch_size and end < len(sorted_mix_infos):
                     utt_len = int(sorted_mix_infos[end][1])
                     if utt_len >= segment_len:  # skip too short utt
@@ -84,9 +88,10 @@ class AudioDataset(data.Dataset):
                         part_mix.append(sorted_mix_infos[end])
                         part_s1.append(sorted_s1_infos[end])
                         part_s2.append(sorted_s2_infos[end])
+                        part_s3.append(sorted_s3_infos[end])
                     end += 1
                 if len(part_mix) > 0:
-                    minibatch.append([part_mix, part_s1, part_s2,
+                    minibatch.append([part_mix, part_s1, part_s2, part_s3,
                                       sample_rate, segment_len])
                 if end == len(sorted_mix_infos):
                     break
@@ -105,6 +110,7 @@ class AudioDataset(data.Dataset):
                 minibatch.append([sorted_mix_infos[start:end],
                                   sorted_s1_infos[start:end],
                                   sorted_s2_infos[start:end],
+                                  sorted_s3_infos[start:end],
                                   sample_rate, segment])
                 if end == len(sorted_mix_infos):
                     break
@@ -161,7 +167,7 @@ from preprocess import preprocess_one_dir
 
 class EvalDataset(data.Dataset):
 
-    def __init__(self, mix_dir, mix_json, batch_size, sample_rate=8000):
+    def __init__(self, mix_dir, mix_json, batch_size, sample_rate=16000):
         """
         Args:
             mix_dir: directory including mixture wav files
@@ -243,19 +249,21 @@ def load_mixtures_and_sources(batch):
         T varies from item to item.
     """
     mixtures, sources = [], []
-    mix_infos, s1_infos, s2_infos, sample_rate, segment_len = batch
+    mix_infos, s1_infos, s2_infos, s3_infos, sample_rate, segment_len = batch
     # for each utterance
-    for mix_info, s1_info, s2_info in zip(mix_infos, s1_infos, s2_infos):
+    for mix_info, s1_info, s2_info, s3_info in zip(mix_infos, s1_infos, s2_infos, s3_infos):
         mix_path = mix_info[0]
         s1_path = s1_info[0]
         s2_path = s2_info[0]
-        assert mix_info[1] == s1_info[1] and s1_info[1] == s2_info[1]
+        s3_path = s3_info[0]
+        assert mix_info[1] == s1_info[1] and s1_info[1] == s2_info[1] and s2_info[1] == s3_info[1]
         # read wav file
         mix, _ = librosa.load(mix_path, sr=sample_rate)
         s1, _ = librosa.load(s1_path, sr=sample_rate)
         s2, _ = librosa.load(s2_path, sr=sample_rate)
-        # merge s1 and s2
-        s = np.dstack((s1, s2))[0]  # T x C, C = 2
+        s3, _ = librosa.load(s3_path, sr=sample_rate)
+        # merge s1 and s2 and s3
+        s = np.dstack((s1, s2, s3))[0]  # T x C, C = 3
         utt_len = mix.shape[-1]
         if segment_len >= 0:
             # segment

@@ -24,7 +24,9 @@ def cal_loss(source, estimated_f0, estimated_loudness, source_lengths):
     real_loudness = spectral_ops.compute_loudness(source)
 
     from ddsp import losses
-    return losses.mean_difference(real_f0, estimated_f0) + losses.mean_difference(real_loudness, estimated_loudness)
+    loss_f0 = losses.mean_difference(real_f0, estimated_f0)
+    loss_loudness = losses.mean_difference(real_loudness, estimated_loudness)
+    return loss_f0 + loss_loudness, loss_f0, loss_loudness
 
     # max_snr, perms, max_snr_idx = cal_si_snr_with_pit(source,
     #                                                   estimate_source,
