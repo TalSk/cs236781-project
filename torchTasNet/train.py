@@ -7,9 +7,9 @@ import argparse
 
 import torch
 
-from torchTasNet.data import AudioDataLoader, AudioDataset
-from torchTasNet.solver import Solver
-from torchTasNet.conv_tasnet import ConvTasNet
+from data import AudioDataLoader, AudioDataset
+from solver import Solver
+from conv_tasnet import ConvTasNet
 
 
 parser = argparse.ArgumentParser(
@@ -42,7 +42,7 @@ parser.add_argument('--X', default=8, type=int,
                     help='Number of convolutional blocks in each repeat')
 parser.add_argument('--R', default=4, type=int,
                     help='Number of repeats')
-parser.add_argument('--C', default=2, type=int,
+parser.add_argument('--C', default=3, type=int,
                     help='Number of speakers')
 parser.add_argument('--norm_type', default='gLN', type=str,
                     choices=['gLN', 'cLN', 'BN'], help='Layer norm type')

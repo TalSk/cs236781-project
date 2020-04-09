@@ -26,7 +26,7 @@ def preprocess_one_dir(in_dir, out_dir, out_filename, sample_rate=16000):
 
 
 def preprocess(args):
-    for data_type in ['tr', 'cv', 'tt']:
+    for data_type in ['train', 'valid', 'infer']:
         for speaker in ['mix', 's1', 's2', 's3']:
             preprocess_one_dir(os.path.join(args.in_dir, data_type, speaker),
                                os.path.join(args.out_dir, data_type),

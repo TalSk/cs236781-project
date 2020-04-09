@@ -6,7 +6,7 @@ import time
 
 import torch
 
-from torchTasNet.pit_criterion import cal_loss
+from pit_criterion import cal_loss
 
 
 class Solver(object):
