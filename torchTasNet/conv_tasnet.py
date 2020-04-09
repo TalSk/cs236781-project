@@ -51,13 +51,7 @@ class ConvTasNet(nn.Module):
         """
         mixture_w = self.encoder(mixture)
         est_mask = self.separator(mixture_w)
-        est_source = self.decoder(mixture_w, est_mask)
-
-        # T changed after conv1d in encoder, fix it here
-        T_origin = mixture.size(-1)
-        T_conv = est_source.size(-1)
-        est_source = F.pad(est_source, (0, T_origin - T_conv))
-        return est_source
+        return self.decoder(mixture_w, est_mask)
 
     @classmethod
     def load_model(cls, path):

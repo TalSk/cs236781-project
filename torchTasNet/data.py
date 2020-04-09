@@ -104,9 +104,9 @@ class AudioDataset(data.Dataset):
             while True:
                 end = min(len(sorted_mix_infos), start + batch_size)
                 # Skip long audio to avoid out-of-memory issue
-                if int(sorted_mix_infos[start][1]) > cv_maxlen * sample_rate:
-                    start = end
-                    continue
+                #if int(sorted_mix_infos[start][1]) > cv_maxlen * sample_rate:
+                #    start = end
+                #    continue
                 minibatch.append([sorted_mix_infos[start:end],
                                   sorted_s1_infos[start:end],
                                   sorted_s2_infos[start:end],
