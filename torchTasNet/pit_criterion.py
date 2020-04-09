@@ -9,19 +9,30 @@ import torch.nn.functional as F
 EPS = 1e-8
 
 
-def cal_loss(source, estimate_source, source_lengths):
+def cal_loss(source, estimated_f0, estimated_loudness, source_lengths):
     """
     Args:
         source: [B, C, T], B is batch size
+        estimated_f0: [B, C, K]
+        estimated_loudness: [B, C, K]
+
         estimate_source: [B, C, T]
         source_lengths: [B]
     """
-    max_snr, perms, max_snr_idx = cal_si_snr_with_pit(source,
-                                                      estimate_source,
-                                                      source_lengths)
-    loss = 0 - torch.mean(max_snr)
-    reorder_estimate_source = reorder_source(estimate_source, perms, max_snr_idx)
-    return loss, max_snr, estimate_source, reorder_estimate_source
+    from ddsp import spectral_ops
+    real_f0 = spectral_ops.compute_f0(source)
+    real_loudness = spectral_ops.compute_loudness(source)
+
+    from ddsp import losses
+    return losses.mean_difference(real_f0, estimated_f0) + losses.mean_difference(real_loudness, estimated_loudness)
+
+    # max_snr, perms, max_snr_idx = cal_si_snr_with_pit(source,
+    #                                                   estimate_source,
+    #                                                   source_lengths)
+    # loss = 0 - torch.mean(max_snr)
+    # reorder_estimate_source = reorder_source(estimate_source, perms, max_snr_idx)
+    # return loss, max_snr, estimate_source, reorder_estimate_source
+
 
 
 def cal_si_snr_with_pit(source, estimate_source, source_lengths):

@@ -175,9 +175,9 @@ class Solver(object):
                 padded_mixture = padded_mixture.cuda()
                 mixture_lengths = mixture_lengths.cuda()
                 padded_source = padded_source.cuda()
-            estimate_source = self.model(padded_mixture)
+            estimated_f0, estimated_loudness = self.model(padded_mixture)
             loss, max_snr, estimate_source, reorder_estimate_source = \
-                cal_loss(padded_source, estimate_source, mixture_lengths)
+                cal_loss(padded_source, estimated_f0, estimated_loudness, mixture_lengths)
             if not cross_valid:
                 self.optimizer.zero_grad()
                 loss.backward()

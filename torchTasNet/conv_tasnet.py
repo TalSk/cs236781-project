@@ -140,7 +140,7 @@ class Decoder(nn.Module):
         source_w = torch.unsqueeze(mixture_w, 1) * est_mask  # [M, C, N, K]
         source_w = torch.transpose(source_w, 2, 3)  # [M, C, K, N]
         # S = DV
-        est_source = self.f0_extractor(source_w)  # [M, C, K, 1]
+        est_f0 = self.f0_extractor(source_w)  # [M, C, K, 1]
 
         est_loudness = self.loudness_extractor(source_w)  # [M, C, K, 1]
 
@@ -154,7 +154,7 @@ class Decoder(nn.Module):
 
         # est_source = self.basis_signals(source_w)  # [M, C, K, L]
         # est_source = overlap_and_add(est_source, self.L // 2)  # M x C x T
-        return est_source, est_loudness
+        return est_f0, est_loudness
 
 
 class TemporalConvNet(nn.Module):
