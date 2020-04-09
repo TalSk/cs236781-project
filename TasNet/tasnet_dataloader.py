@@ -17,7 +17,7 @@ class TasNetDataLoader():
         self.wav_dir = os.path.join(data_dir, mode)
         self.tfr = os.path.join(data_dir, mode + '.tfr')
         self.mode = mode
-        self.n_speaker = 2
+        self.n_speaker = 3
         self.batch_size = batch_size
         self.sample_rate = sample_rate
 
@@ -44,6 +44,7 @@ class TasNetDataLoader():
             mix_wav_dir = os.path.join(self.wav_dir, "mix")
             s1_wav_dir = os.path.join(self.wav_dir, "s1")
             s2_wav_dir = os.path.join(self.wav_dir, "s2")
+            s3_wav_dir = os.path.join(self.wav_dir, "s3")
             filenames = os.listdir(mix_wav_dir)
             for filename in tqdm(filenames):
                 mix, _ = librosa.load(
@@ -52,6 +53,8 @@ class TasNetDataLoader():
                     os.path.join(s1_wav_dir, filename), self.sample_rate)
                 s2, _ = librosa.load(
                     os.path.join(s2_wav_dir, filename), self.sample_rate)
+                s3, _ = librosa.load(
+                    os.path.join(s3_wav_dir, filename), self.sample_rate)
 
                 def padding(inputs):
                     return np.pad(
@@ -67,7 +70,8 @@ class TasNetDataLoader():
                             feature={
                                 "mix": self._float_list_feature(mix[l:r]),
                                 "s1": self._float_list_feature(s1[l:r]),
-                                "s2": self._float_list_feature(s2[l:r])
+                                "s2": self._float_list_feature(s2[l:r]),
+                                "s3": self._float_list_feature(s3[l:r])
                             }))
                     writer.write(example.SerializeToString())
 
@@ -87,11 +91,13 @@ class TasNetDataLoader():
             features={
                 "mix": tf.VarLenFeature(tf.float32),
                 "s1": tf.VarLenFeature(tf.float32),
-                "s2": tf.VarLenFeature(tf.float32)
+                "s2": tf.VarLenFeature(tf.float32),
+                "s3": tf.VarLenFeature(tf.float32),
             },
         )
         mix = tf.sparse_tensor_to_dense(example["mix"])
         s1 = tf.sparse_tensor_to_dense(example["s1"])
         s2 = tf.sparse_tensor_to_dense(example["s2"])
-        audios = tf.stack([mix, s1, s2])
+        s3 = tf.sparse_tensor_to_dense(example["s3"])
+        audios = tf.stack([mix, s1, s2, s3])
         return audios

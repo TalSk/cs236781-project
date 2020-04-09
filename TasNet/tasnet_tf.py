@@ -5,7 +5,7 @@ class TasNet:
                  R):
         self.mode = mode
         self.dataloader = dataloader
-        self.C = self.n_speaker = n_speaker
+        self.C = n_speaker
         self.N = N
         self.L = L
         self.B = B
@@ -97,7 +97,7 @@ class TasNet:
         sdr2 = self._calc_sdr(outputs[1], single_audios[0]) + \
                self._calc_sdr(outputs[0], single_audios[1])
         sdr = tf.maximum(sdr1, sdr2)
-        self.loss = tf.reduce_mean(-sdr) / self.n_speaker
+        self.loss = tf.reduce_mean(-sdr) / self.C
 
     def _channel_norm(self, inputs, name):
         # inputs: [batch_size, some len, channel_size]
