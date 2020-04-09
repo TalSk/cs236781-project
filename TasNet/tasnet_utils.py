@@ -18,7 +18,7 @@ def print_num_of_trainable_parameters():
         shape = variable.get_shape()
         variable_parameters = 1
         for dim in shape:
-            variable_parameters *= dim.value
+            variable_parameters *= dim
         total_parameters += variable_parameters
     logging.info('# of trainable parameters: %d' % total_parameters)
 

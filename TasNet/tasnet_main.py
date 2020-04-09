@@ -5,12 +5,14 @@ import librosa
 import numpy as np
 import logging
 
-from TasNet.tasnet_tf import TasNet
-from TasNet.tasnet_utils import *
-from TasNet.tasnet_dataloader import TasNetDataLoader
+from tasnet_tf import TasNet
+from tasnet_utils import *
+from tasnet_dataloader import TasNetDataLoader
 
 
 if __name__ == '__main__':
+    tf.disable_eager_execution()
+    
     args, logger = setup()
     global_step = tf.Variable(0, trainable=False, name="global_step")
     if args.mode == 'train':
