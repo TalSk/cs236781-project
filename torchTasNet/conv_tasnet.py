@@ -29,8 +29,8 @@ class ConvTasNet(nn.Module):
         """
         super(ConvTasNet, self).__init__()
         # Hyper-parameter
-        self.L = sample_rate_hz // frame_rate_hz
-        self.N, self.B, self.H, self.P, self.X, self.R, self.C = N, B, H, P, X, R, C
+        L = sample_rate_hz // frame_rate_hz
+        self.N, self.L, self.B, self.H, self.P, self.X, self.R, self.C = N, L, B, H, P, X, R, C
         self.norm_type = norm_type
         self.causal = causal
         self.mask_nonlinear = mask_nonlinear

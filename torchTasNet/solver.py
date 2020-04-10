@@ -44,8 +44,8 @@ class Solver(object):
                                  legend=['train loss', 'cv loss'])
             self.vis_window = None
             self.vis_epochs = torch.arange(1, self.epochs + 1)
-        self.sample_rate_hz = args.sample_rate_hz
-        self.frame_rate_hz = args.frane_rate_hz
+        self.sample_rate_hz = args.sample_rate
+        self.frame_rate_hz = args.frame_rate
         self._reset()
 
     def _reset(self):

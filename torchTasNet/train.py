@@ -27,7 +27,7 @@ parser.add_argument('--cv_maxlen', default=8, type=float,
                     help='max audio length (seconds) in cv, to avoid OOM issue.')
 parser.add_argument('--sample_rate', default=16000, type=int,
                     help='Input sound sample rate in HZ')
-parser.add_argument('--frame_rate', default=256, type=int,
+parser.add_argument('--frame_rate', default=250, type=int,
                     help='Output F0 & Loudness rate in HZ')
 # Network architecture
 parser.add_argument('--N', default=256, type=int,
