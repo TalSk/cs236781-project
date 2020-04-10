@@ -27,6 +27,10 @@ parser.add_argument('--segment', default=4, type=float,
                     help='Segment length (seconds)')
 parser.add_argument('--cv_maxlen', default=8, type=float,
                     help='max audio length (seconds) in cv, to avoid OOM issue.')
+parser.add_argument('--sample_rate', default=16000, type=int,
+                    help='Input sound sample rate in HZ')
+parser.add_argument('--frame_rate', default=256, type=int,
+                    help='Output F0 & Loudness rate in HZ')
 # Network architecture
 parser.add_argument('--N', default=256, type=int,
                     help='Number of filters in autoencoder')
@@ -38,9 +42,9 @@ parser.add_argument('--H', default=512, type=int,
                     help='Number of channels in convolutional blocks')
 parser.add_argument('--P', default=3, type=int,
                     help='Kernel size in convolutional blocks')
-parser.add_argument('--X', default=8, type=int,
+parser.add_argument('--X', default=5, type=int,
                     help='Number of convolutional blocks in each repeat')
-parser.add_argument('--R', default=4, type=int,
+parser.add_argument('--R', default=1, type=int,
                     help='Number of repeats')
 parser.add_argument('--C', default=3, type=int,
                     help='Number of speakers')

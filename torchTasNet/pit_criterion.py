@@ -9,7 +9,7 @@ import torch.nn.functional as F
 EPS = 1e-8
 
 
-def cal_loss(source, estimated_f0, estimated_loudness, source_lengths):
+def cal_loss(source, estimated_f0, estimated_loudness, source_lengths, sample_rate_hz=16000, frame_rate_hz=250):
     """
     Args:
         source: [B, C, T], B is batch size
@@ -20,8 +20,8 @@ def cal_loss(source, estimated_f0, estimated_loudness, source_lengths):
         source_lengths: [B]
     """
     from ddsp import spectral_ops
-    real_f0 = spectral_ops.compute_f0(source)
-    real_loudness = spectral_ops.compute_loudness(source)
+    real_f0 = spectral_ops.compute_f0(source, sample_rate_hz, frame_rate_hz)
+    real_loudness = spectral_ops.compute_loudness(source, sample_rate_hz, frame_rate_hz)
 
     from ddsp import losses
     loss_f0 = losses.mean_difference(real_f0, estimated_f0)

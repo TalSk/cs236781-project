@@ -12,7 +12,7 @@ EPS = 1e-8
 
 class ConvTasNet(nn.Module):
     def __init__(self, N, L, B, H, P, X, R, C, norm_type="gLN", causal=False,
-                 mask_nonlinear='relu'):
+                 mask_nonlinear='relu', sample_rate_hz=16000, frame_rate_hz=250):
         """
         Args:
             N: Number of filters in autoencoder
@@ -29,7 +29,8 @@ class ConvTasNet(nn.Module):
         """
         super(ConvTasNet, self).__init__()
         # Hyper-parameter
-        self.N, self.L, self.B, self.H, self.P, self.X, self.R, self.C = N, L, B, H, P, X, R, C
+        self.L = sample_rate_hz // frame_rate_hz
+        self.N, self.B, self.H, self.P, self.X, self.R, self.C = N, B, H, P, X, R, C
         self.norm_type = norm_type
         self.causal = causal
         self.mask_nonlinear = mask_nonlinear
@@ -47,7 +48,7 @@ class ConvTasNet(nn.Module):
         Args:
             mixture: [M, T], M is batch size, T is #samples
         Returns:
-            est_source: [M, C, T]
+            est_source: ([M, C, K], [M, C, K]) (f0, loudness)
         """
         mixture_w = self.encoder(mixture)
         est_mask = self.separator(mixture_w)
@@ -119,8 +120,16 @@ class Decoder(nn.Module):
         self.N, self.L = N, L
         # Components
         # self.basis_signals = nn.Linear(N, L, bias=False)
-        self.f0_extractor = nn.Linear(N, 1, bias=False)
-        self.loudness_extractor = nn.Linear(N, 1, bias=False)
+        self.f0_extractor = nn.Sequential(
+            nn.Linear(N, 2*N, bias=False), nn.ReLU(),
+            nn.Linear(2*N, 2*N, bias=False), nn.ReLU(),
+            nn.Linear(2*N, 1, bias=False), nn.ReLU(),
+            )
+        self.loudness_extractor = nn.Sequential(
+            nn.Linear(N, 2*N, bias=False), nn.ReLU(),
+            nn.Linear(2*N, 2*N, bias=False), nn.ReLU(),
+            nn.Linear(2*N, 1, bias=False), nn.ReLU(),
+            )
 
     def forward(self, mixture_w, est_mask):
         """
@@ -128,14 +137,13 @@ class Decoder(nn.Module):
             mixture_w: [M, N, K]
             est_mask: [M, C, N, K]
         Returns:
-            est_source: [M, C, T]
+            est_source: ([M, C, K], [M, C, K]) (f0, loudness)
         """
         # D = W * M
         source_w = torch.unsqueeze(mixture_w, 1) * est_mask  # [M, C, N, K]
         source_w = torch.transpose(source_w, 2, 3)  # [M, C, K, N]
         # S = DV
         est_f0 = self.f0_extractor(source_w)  # [M, C, K, 1]
-
         est_loudness = self.loudness_extractor(source_w)  # [M, C, K, 1]
 
         # est_loudness = self.basis_signals(source_w) # [M, C, K, L]
@@ -148,7 +156,7 @@ class Decoder(nn.Module):
 
         # est_source = self.basis_signals(source_w)  # [M, C, K, L]
         # est_source = overlap_and_add(est_source, self.L // 2)  # M x C x T
-        return est_f0, est_loudness
+        return est_f0, est_loudness # ([M, C, K], [M, C, K])
 
 
 class TemporalConvNet(nn.Module):

@@ -44,7 +44,8 @@ class Solver(object):
                                  legend=['train loss', 'cv loss'])
             self.vis_window = None
             self.vis_epochs = torch.arange(1, self.epochs + 1)
-
+        self.sample_rate_hz = args.sample_rate_hz
+        self.frame_rate_hz = args.frane_rate_hz
         self._reset()
 
     def _reset(self):
@@ -176,7 +177,7 @@ class Solver(object):
                 mixture_lengths = mixture_lengths.cuda()
                 padded_source = padded_source.cuda()
             estimated_f0, estimated_loudness = self.model(padded_mixture)
-            loss, loss_f0, loss_loudness = cal_loss(padded_source, estimated_f0, estimated_loudness, mixture_lengths)
+            loss, loss_f0, loss_loudness = cal_loss(padded_source, estimated_f0, estimated_loudness, mixture_lengths, self.sample_rate_hz, self.frame_rate_hz)
             if not cross_valid:
                 self.optimizer.zero_grad()
                 loss.backward()
