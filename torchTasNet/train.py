@@ -21,8 +21,6 @@ parser.add_argument('--train_dir', type=str, default=None,
                     help='directory including mix.json, s1.json and s2.json')
 parser.add_argument('--valid_dir', type=str, default=None,
                     help='directory including mix.json, s1.json and s2.json')
-parser.add_argument('--sample_rate', default=16000, type=int,
-                    help='Sample rate')
 parser.add_argument('--segment', default=4, type=float,
                     help='Segment length (seconds)')
 parser.add_argument('--cv_maxlen', default=8, type=float,
