@@ -51,20 +51,20 @@ class TasNetDataLoader():
                 logging.info("Preprocessing %s" % (os.path.join(s1_wav_dir, filename)))
                 s1, _ = librosa.load(
                     os.path.join(s1_wav_dir, filename), self.sample_rate)
-                s1_f0 = spectral_ops.compute_f0(s1[0:100], self.sample_rate, self.frame_rate)[0]
-                s1_loudness = spectral_ops.compute_loudness(s1[0:100], self.sample_rate, self.frame_rate)
+                s1_f0 = spectral_ops.compute_f0(s1, self.sample_rate, self.frame_rate)[0]
+                s1_loudness = spectral_ops.compute_loudness(s1, self.sample_rate, self.frame_rate)
 
                 logging.info("Preprocessing %s" % (os.path.join(s2_wav_dir, filename)))
                 s2, _ = librosa.load(
                     os.path.join(s2_wav_dir, filename), self.sample_rate)
-                s2_f0 = spectral_ops.compute_f0(s2[0:100], self.sample_rate, self.frame_rate)[0]
-                s2_loudness = spectral_ops.compute_loudness(s2[0:100], self.sample_rate, self.frame_rate)
+                s2_f0 = spectral_ops.compute_f0(s2, self.sample_rate, self.frame_rate)[0]
+                s2_loudness = spectral_ops.compute_loudness(s2, self.sample_rate, self.frame_rate)
 
                 logging.info("Preprocessing %s" % (os.path.join(s3_wav_dir, filename)))
                 s3, _ = librosa.load(
                     os.path.join(s3_wav_dir, filename), self.sample_rate)
-                s3_f0 = spectral_ops.compute_f0(s3[0:100], self.sample_rate, self.frame_rate)[0]
-                s3_loudness = spectral_ops.compute_loudness(s3[0:100], self.sample_rate, self.frame_rate)
+                s3_f0 = spectral_ops.compute_f0(s3, self.sample_rate, self.frame_rate)[0]
+                s3_loudness = spectral_ops.compute_loudness(s3, self.sample_rate, self.frame_rate)
                 
                 def padding(inputs):
                     return np.pad(
