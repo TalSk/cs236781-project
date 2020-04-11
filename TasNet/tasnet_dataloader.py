@@ -5,9 +5,10 @@ import librosa
 import numpy as np
 from tqdm import tqdm
 
+from ddsp import spectral_ops
 
 class TasNetDataLoader():
-    def __init__(self, mode, data_dir, batch_size, sample_rate):
+    def __init__(self, mode, data_dir, batch_size, sample_rate, frame_rate):
         if mode != "train" and mode != "valid" and mode != "infer":
             raise ValueError("mode: {} while mode should be "
                              "'train', 'valid', or 'infer'".format(mode))
@@ -20,6 +21,7 @@ class TasNetDataLoader():
         self.n_speaker = 3
         self.batch_size = batch_size
         self.sample_rate = sample_rate
+        self.frame_rate = frame_rate
 
         if not os.path.isfile(self.tfr):
             self._encode()
@@ -41,21 +43,29 @@ class TasNetDataLoader():
     def _encode(self):
         logging.info("Writing {}".format(self.tfr))
         with tf.python_io.TFRecordWriter(self.tfr) as writer:
-            mix_wav_dir = os.path.join(self.wav_dir, "mix")
             s1_wav_dir = os.path.join(self.wav_dir, "s1")
             s2_wav_dir = os.path.join(self.wav_dir, "s2")
             s3_wav_dir = os.path.join(self.wav_dir, "s3")
-            filenames = os.listdir(mix_wav_dir)
+            filenames = os.listdir(s1_wav_dir)
             for filename in tqdm(filenames):
-                mix, _ = librosa.load(
-                    os.path.join(mix_wav_dir, filename), self.sample_rate)
+                print("Preprocessing %s" % (os.path.join(s1_wav_dir, filename)))
                 s1, _ = librosa.load(
                     os.path.join(s1_wav_dir, filename), self.sample_rate)
+                s1_f0 = spectral_ops.compute_f0(s1, self.sample_rate, self.frame_rate)
+                s1_loudness = spectral_ops.compute_loudness(s1, self.sample_rate, self.frame_rate)
+
+                print("Preprocessing %s" % (os.path.join(s2_wav_dir, filename)))
                 s2, _ = librosa.load(
                     os.path.join(s2_wav_dir, filename), self.sample_rate)
+                s2_f0 = spectral_ops.compute_f0(s2, self.sample_rate, self.frame_rate)
+                s2_loudness = spectral_ops.compute_loudness(s2, self.sample_rate, self.frame_rate)
+
+                print("Preprocessing %s" % (os.path.join(s3_wav_dir, filename)))
                 s3, _ = librosa.load(
                     os.path.join(s3_wav_dir, filename), self.sample_rate)
-
+                s3_f0 = spectral_ops.compute_f0(s3, self.sample_rate, self.frame_rate)
+                s3_loudness = spectral_ops.compute_loudness(s3, self.sample_rate, self.frame_rate)
+                
                 def padding(inputs):
                     return np.pad(
                         inputs, (int(2.55 * self.sample_rate), 0),
@@ -64,18 +74,31 @@ class TasNetDataLoader():
 
                 # mix, s1, s2 = padding(mix), padding(s1), padding(s2)
 
+                def sample_to_frame(sample_num):
+                    return int(self.frame_rate * sample_num / self.sample_rate)
+
                 def write(l, r):
+                    l_frame = sample_to_frame(l)
+                    r_frame = sample_to_frame(r)
+
                     example = tf.train.Example(
                         features=tf.train.Features(
                             feature={
-                                "mix": self._float_list_feature(mix[l:r]),
-                                "s1": self._float_list_feature(s1[l:r]),
-                                "s2": self._float_list_feature(s2[l:r]),
-                                "s3": self._float_list_feature(s3[l:r])
+                                "s1_audio": self._float_list_feature(s1[l:r]),
+                                "s1_f0": self._float_list_feature(s1_f0[l_frame:r_frame]),
+                                "s1_loudness": self._float_list_feature(s1_loudness[l_frame:r_frame]),
+
+                                "s2_audio": self._float_list_feature(s2[l:r]),
+                                "s2_f0": self._float_list_feature(s2_f0[l_frame:r_frame]),
+                                "s2_loudness": self._float_list_feature(s2_loudness[l_frame:r_frame]),
+
+                                "s3_audio": self._float_list_feature(s3[l:r]),
+                                "s3_f0": self._float_list_feature(s3_f0[l_frame:r_frame]),
+                                "s3_loudness": self._float_list_feature(s3_loudness[l_frame:r_frame]),
                             }))
                     writer.write(example.SerializeToString())
 
-                now_length = mix.shape[-1]
+                now_length = s1.shape[-1]
                 if now_length < int(4 * self.sample_rate):
                     continue
                 target_length = int(4 * self.sample_rate)
@@ -89,15 +112,23 @@ class TasNetDataLoader():
         example = tf.parse_single_example(
             serialized_example,
             features={
-                "mix": tf.VarLenFeature(tf.float32),
-                "s1": tf.VarLenFeature(tf.float32),
-                "s2": tf.VarLenFeature(tf.float32),
-                "s3": tf.VarLenFeature(tf.float32),
+                "s1_audio": tf.VarLenFeature(tf.float32),
+                "s1_f0": tf.VarLenFeature(tf.float32),
+                "s1_loudness": tf.VarLenFeature(tf.float32),
+
+                "s2_audio": tf.VarLenFeature(tf.float32),
+                "s2_f0": tf.VarLenFeature(tf.float32),
+                "s2_loudness": tf.VarLenFeature(tf.float32),
+
+                "s3_audio": tf.VarLenFeature(tf.float32),
+                "s3_f0": tf.VarLenFeature(tf.float32),
+                "s3_loudness": tf.VarLenFeature(tf.float32),
             },
         )
-        mix = tf.sparse_tensor_to_dense(example["mix"])
-        s1 = tf.sparse_tensor_to_dense(example["s1"])
-        s2 = tf.sparse_tensor_to_dense(example["s2"])
-        s3 = tf.sparse_tensor_to_dense(example["s3"])
-        audios = tf.stack([mix, s1, s2, s3])
-        return audios
+        s1_audio = tf.sparse_tensor_to_dense(example["s1_audio"])
+        s2_audio = tf.sparse_tensor_to_dense(example["s2_audio"])
+        s3_audio = tf.sparse_tensor_to_dense(example["s3_audio"])
+        audios = tf.stack([s1_audio, s2_audio, s3_audio])
+        f0s = tf.stack([example["s1_f0"], example["s2_f0"], example["s3_f0"]])
+        loudness = tf.stack([example["s1_loudness"], example["s2_loudness"], example["s3_loudness"]])
+        return audios, f0s, loudness

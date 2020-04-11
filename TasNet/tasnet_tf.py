@@ -2,7 +2,7 @@ import tensorflow.compat.v1 as tf
 
 class TasNet:
     def __init__(self, mode, dataloader, layers, n_speaker, N, L, B, H, P, X,
-                 R):
+                 R, sample_rate_hz):
         self.mode = mode
         self.dataloader = dataloader
         self.C = n_speaker
@@ -13,6 +13,7 @@ class TasNet:
         self.P = P
         self.X = X
         self.R = R
+        self.sample_rate = sample_rate_hz
         self.dtype = tf.float32
 
         self.layers = layers
@@ -42,7 +43,7 @@ class TasNet:
             # encoded_input: [batch_size, some len, N]
             encoded_input = self.layers["conv1d_encoder"](
                 inputs=tf.expand_dims(input_audio, -1))
-            self.encoded_len = (int(4 * 16000) - self.L) // (
+            self.encoded_len = (int(4 * self.sample_rate) - self.L) // (
                 self.L // 2) + 1
 
         with tf.variable_scope("bottleneck"):
@@ -94,9 +95,13 @@ class TasNet:
 
         sdr1 = self._calc_sdr(outputs[0], single_audios[0]) + \
                self._calc_sdr(outputs[1], single_audios[1])
+
         sdr2 = self._calc_sdr(outputs[1], single_audios[0]) + \
                self._calc_sdr(outputs[0], single_audios[1])
-        sdr = tf.maximum(sdr1, sdr2)
+
+        sdr3 = self._calc_sdr(outputs[1], single_audios[0]) + \
+               self._calc_sdr(outputs[0], single_audios[1])
+        sdr = tf.maximum(sdr1, sdr2, sd3)
         self.loss = tf.reduce_mean(-sdr) / self.C
 
     def _channel_norm(self, inputs, name):
