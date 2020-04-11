@@ -48,23 +48,23 @@ class TasNetDataLoader():
             s3_wav_dir = os.path.join(self.wav_dir, "s3")
             filenames = os.listdir(s1_wav_dir)
             for filename in tqdm(filenames):
-                print("Preprocessing %s" % (os.path.join(s1_wav_dir, filename)))
+                logging.info("Preprocessing %s" % (os.path.join(s1_wav_dir, filename)))
                 s1, _ = librosa.load(
                     os.path.join(s1_wav_dir, filename), self.sample_rate)
-                s1_f0 = spectral_ops.compute_f0(s1, self.sample_rate, self.frame_rate)
-                s1_loudness = spectral_ops.compute_loudness(s1, self.sample_rate, self.frame_rate)
+                s1_f0 = spectral_ops.compute_f0(s1[0:100], self.sample_rate, self.frame_rate)[0]
+                s1_loudness = spectral_ops.compute_loudness(s1[0:100], self.sample_rate, self.frame_rate)
 
-                print("Preprocessing %s" % (os.path.join(s2_wav_dir, filename)))
+                logging.info("Preprocessing %s" % (os.path.join(s2_wav_dir, filename)))
                 s2, _ = librosa.load(
                     os.path.join(s2_wav_dir, filename), self.sample_rate)
-                s2_f0 = spectral_ops.compute_f0(s2, self.sample_rate, self.frame_rate)
-                s2_loudness = spectral_ops.compute_loudness(s2, self.sample_rate, self.frame_rate)
+                s2_f0 = spectral_ops.compute_f0(s2[0:100], self.sample_rate, self.frame_rate)[0]
+                s2_loudness = spectral_ops.compute_loudness(s2[0:100], self.sample_rate, self.frame_rate)
 
-                print("Preprocessing %s" % (os.path.join(s3_wav_dir, filename)))
+                logging.info("Preprocessing %s" % (os.path.join(s3_wav_dir, filename)))
                 s3, _ = librosa.load(
                     os.path.join(s3_wav_dir, filename), self.sample_rate)
-                s3_f0 = spectral_ops.compute_f0(s3, self.sample_rate, self.frame_rate)
-                s3_loudness = spectral_ops.compute_loudness(s3, self.sample_rate, self.frame_rate)
+                s3_f0 = spectral_ops.compute_f0(s3[0:100], self.sample_rate, self.frame_rate)[0]
+                s3_loudness = spectral_ops.compute_loudness(s3[0:100], self.sample_rate, self.frame_rate)
                 
                 def padding(inputs):
                     return np.pad(
@@ -126,9 +126,18 @@ class TasNetDataLoader():
             },
         )
         s1_audio = tf.sparse_tensor_to_dense(example["s1_audio"])
+        s1_f0 = tf.sparse_tensor_to_dense(example["s1_f0"])
+        s1_loudness = tf.sparse_tensor_to_dense(example["s1_loudness"])
+
         s2_audio = tf.sparse_tensor_to_dense(example["s2_audio"])
+        s2_f0 = tf.sparse_tensor_to_dense(example["s2_f0"])
+        s2_loudness = tf.sparse_tensor_to_dense(example["s2_loudness"])
+
         s3_audio = tf.sparse_tensor_to_dense(example["s3_audio"])
+        s3_f0 = tf.sparse_tensor_to_dense(example["s3_f0"])
+        s3_loudness = tf.sparse_tensor_to_dense(example["s3_loudness"])
+
         audios = tf.stack([s1_audio, s2_audio, s3_audio])
-        f0s = tf.stack([example["s1_f0"], example["s2_f0"], example["s3_f0"]])
-        loudness = tf.stack([example["s1_loudness"], example["s2_loudness"], example["s3_loudness"]])
+        f0s = tf.stack([s1_f0, s2_f0, s3_f0])
+        loudness = tf.stack([s1_loudness, s2_loudness, s3_loudness])
         return audios, f0s, loudness

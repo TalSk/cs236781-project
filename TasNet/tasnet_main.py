@@ -56,15 +56,15 @@ if __name__ == '__main__':
         if args.mode == 'train':
             train_model = TasNet("train", train_dataloader, layers, args.C, args.N,
                                  args.L, args.B, args.H, args.P, args.X,
-                                 args.R, args.sr)
+                                 args.R, args.sample_rate)
             scope.reuse_variables()
             valid_model = TasNet("valid", valid_dataloader, layers, args.C, args.N,
                                  args.L, args.B, args.H, args.P, args.X,
-                                 args.R, args.sr)
+                                 args.R, args.sample_rate)
         else:
             infer_model = TasNet("infer", infer_dataloader, layers, args.C, args.N,
                                  args.L, args.B, args.H, args.P, args.X,
-                                 args.R, args.sr)
+                                 args.R, args.sample_rate)
 
     print_num_of_trainable_parameters()
     trainable_variables = tf.trainable_variables()

@@ -32,8 +32,8 @@ class TasNet:
 
     def _build_graph(self):
         # audios: [batch_size, max_len]
-        audios = self.dataloader.get_next()
-
+        audios, f0s, loudness = self.dataloader.get_next()
+        
         input_audio = audios[:, 0, :]
 
         self.single_audios = single_audios = tf.unstack(
@@ -99,9 +99,7 @@ class TasNet:
         sdr2 = self._calc_sdr(outputs[1], single_audios[0]) + \
                self._calc_sdr(outputs[0], single_audios[1])
 
-        sdr3 = self._calc_sdr(outputs[1], single_audios[0]) + \
-               self._calc_sdr(outputs[0], single_audios[1])
-        sdr = tf.maximum(sdr1, sdr2, sd3)
+        sdr = tf.maximum(sdr1, sdr2)
         self.loss = tf.reduce_mean(-sdr) / self.C
 
     def _channel_norm(self, inputs, name):
