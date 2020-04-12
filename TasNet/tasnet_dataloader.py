@@ -43,11 +43,16 @@ class TasNetDataLoader():
     def _encode(self):
         logging.info("Writing {}".format(self.tfr))
         with tf.python_io.TFRecordWriter(self.tfr) as writer:
+            mix_wav_dir = os.path.join(self.wav_dir, "mix")
             s1_wav_dir = os.path.join(self.wav_dir, "s1")
             s2_wav_dir = os.path.join(self.wav_dir, "s2")
             s3_wav_dir = os.path.join(self.wav_dir, "s3")
             filenames = os.listdir(s1_wav_dir)
             for filename in tqdm(filenames):
+                logging.info("Preprocessing %s" % (os.path.join(mix_wav_dir, filename)))
+                mix, _ = librosa.load(
+                    os.path.join(mix_wav_dir, filename), self.sample_rate)
+
                 logging.info("Preprocessing %s" % (os.path.join(s1_wav_dir, filename)))
                 s1, _ = librosa.load(
                     os.path.join(s1_wav_dir, filename), self.sample_rate)
@@ -84,6 +89,8 @@ class TasNetDataLoader():
                     example = tf.train.Example(
                         features=tf.train.Features(
                             feature={
+                                "mix_audio": self._float_list_feature(mix[l:r]),
+
                                 "s1_audio": self._float_list_feature(s1[l:r]),
                                 "s1_f0": self._float_list_feature(s1_f0[l_frame:r_frame]),
                                 "s1_loudness": self._float_list_feature(s1_loudness[l_frame:r_frame]),
@@ -112,6 +119,8 @@ class TasNetDataLoader():
         example = tf.parse_single_example(
             serialized_example,
             features={
+                "mix": tf.VarLenFeature(tf.float32),
+
                 "s1_audio": tf.VarLenFeature(tf.float32),
                 "s1_f0": tf.VarLenFeature(tf.float32),
                 "s1_loudness": tf.VarLenFeature(tf.float32),
@@ -125,6 +134,8 @@ class TasNetDataLoader():
                 "s3_loudness": tf.VarLenFeature(tf.float32),
             },
         )
+        mix = tf.sparse_tensor_to_dense(example["mix"])
+
         s1_audio = tf.sparse_tensor_to_dense(example["s1_audio"])
         s1_f0 = tf.sparse_tensor_to_dense(example["s1_f0"])
         s1_loudness = tf.sparse_tensor_to_dense(example["s1_loudness"])
@@ -137,7 +148,7 @@ class TasNetDataLoader():
         s3_f0 = tf.sparse_tensor_to_dense(example["s3_f0"])
         s3_loudness = tf.sparse_tensor_to_dense(example["s3_loudness"])
 
-        audios = tf.stack([s1_audio, s2_audio, s3_audio])
+        audios = tf.stack([mix, s1_audio, s2_audio, s3_audio])
         f0s = tf.stack([s1_f0, s2_f0, s3_f0])
         loudness = tf.stack([s1_loudness, s2_loudness, s3_loudness])
         return audios, f0s, loudness
