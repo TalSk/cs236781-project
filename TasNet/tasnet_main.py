@@ -119,7 +119,7 @@ if __name__ == '__main__':
                         train_iter_cnt += args.batch_size
                     except tf.errors.OutOfRangeError:
                         logging.info(
-                            'step = {} , train SDR = {:5f} , lr = {:5f}'.
+                            'step = {} , train loss = {:5f} , lr = {:5f}'.
                             format(cur_global_step,
                                    -train_loss_sum / train_iter_cnt, lr))
                         break
@@ -138,7 +138,7 @@ if __name__ == '__main__':
                         if max(valid_scores[-3:]) < valid_sdr:
                             lr /= 2
 
-                        logging.info('validation SDR = {:5f}'.format(cur_sdr))
+                        logging.info('validation loss = {:5f}'.format(cur_sdr))
                         if cur_sdr > valid_sdr:
                             valid_sdr = cur_sdr
                             saver.save(
