@@ -127,7 +127,7 @@ class TasNet:
     def _calc_loudness_loss(self, gt_lds, pred_lds):
         list_difference = [gt_lds[:, i, :] - pred_lds[i] for i in range(3)]
         difference = sum(list_difference)
-        return tf.reduce_mean(tf.log(tf.abs(difference)))
+        return tf.reduce_mean(tf.abs(difference))
 
     def _compute_unit_midi(self, probs):
         """Computes the midi from a distribution over the unit interval."""
