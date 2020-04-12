@@ -36,7 +36,13 @@ if __name__ == '__main__':
             "bottleneck":
             tf.keras.layers.Conv1D(args.B, 1, 1),
             "1d_deconv":
-            tf.keras.layers.Dense(args.L, use_bias=False)
+            tf.keras.layers.Dense(args.L, use_bias=False),
+            "f0_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * args.N, use_bias=False),
+                                              tf.keras.layers.Dense(2 * args.N, use_bias=False),
+                                              tf.keras.layers.Dense(128, use_bias=False))),
+            "loudness_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * args.N, use_bias=False),
+                                              tf.keras.layers.Dense(2 * args.N, use_bias=False),
+                                              tf.keras.layers.Dense(1, use_bias=False)))
         }
         for i in range(args.C):
             layers["1x1_conv_decoder_{}".format(i)] = \

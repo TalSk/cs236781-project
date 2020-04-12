@@ -1,4 +1,6 @@
 import tensorflow.compat.v1 as tf
+import numpy as np
+
 
 class TasNet:
     def __init__(self, mode, dataloader, layers, n_speaker, N, L, B, H, P, X,
@@ -22,7 +24,7 @@ class TasNet:
 
     def _calc_sdr(self, s_hat, s):
         def norm(x):
-            return tf.reduce_sum(x**2, axis=-1, keepdims=True)
+            return tf.reduce_sum(x ** 2, axis=-1, keepdims=True)
 
         s_target = tf.reduce_sum(
             s_hat * s, axis=-1, keepdims=True) * s / norm(s)
@@ -33,7 +35,7 @@ class TasNet:
     def _build_graph(self):
         # audios: [batch_size, max_len]
         audios, f0s, loudness = self.dataloader.get_next()
-        
+
         input_audio = audios[:, 0, :]
 
         self.single_audios = single_audios = tf.unstack(
@@ -44,7 +46,7 @@ class TasNet:
             encoded_input = self.layers["conv1d_encoder"](
                 inputs=tf.expand_dims(input_audio, -1))
             self.encoded_len = (int(4 * self.sample_rate) - self.L) // (
-                self.L // 2) + 1
+                    self.L // 2) + 1
 
         with tf.variable_scope("bottleneck"):
             # norm_input: [batch_size, some len, N]
@@ -83,24 +85,60 @@ class TasNet:
         sep_output_list = [mask * encoded_input for mask in prob_list]
 
         sep_output_list = [
-            self.layers["1d_deconv"](sep_output)
+            (self.layers["f0_deconv"](sep_output), self.layers["loudness_deconv"](sep_output))
             for sep_output in sep_output_list
         ]
-        self.outputs = outputs = [
-            tf.signal.overlap_and_add(
-                signal=sep_output,
-                frame_step=self.L // 2,
-            ) for sep_output in sep_output_list
-        ]
 
-        sdr1 = self._calc_sdr(outputs[0], single_audios[0]) + \
-               self._calc_sdr(outputs[1], single_audios[1])
+        # self.outputs = outputs = [
+        #     tf.signal.overlap_and_add(
+        #         signal=sep_output,
+        #         frame_step=self.L // 2,
+        #     ) for sep_output in sep_output_list
+        # ]
 
-        sdr2 = self._calc_sdr(outputs[1], single_audios[0]) + \
-               self._calc_sdr(outputs[0], single_audios[1])
+        # sdr1 = self._calc_sdr(outputs[0], single_audios[0]) + \
+        #        self._calc_sdr(outputs[1], single_audios[1])
+        #
+        # sdr2 = self._calc_sdr(outputs[1], single_audios[0]) + \
+        #        self._calc_sdr(outputs[0], single_audios[1])
 
-        sdr = tf.maximum(sdr1, sdr2)
-        self.loss = tf.reduce_mean(-sdr) / self.C
+        # sdr = tf.maximum(sdr1, sdr2)
+        # self.loss = tf.reduce_mean(-sdr) / self.C
+        probs = [tf.nn.softplus(y[0]) + 1e-3 for y in sep_output_list]
+        probs = [prob / tf.reduce_sum(prob, axis=-1, keepdims=True) for prob in probs]
+        output_f0s = self._compute_unit_midi(probs)
+        output_loudnesses = [lds for _, lds in sep_output_list]
+
+        self.outputs = []
+
+        for i in range(len(output_f0s)):
+            self.outputs += [output_f0s[i], output_loudnesses[i]]
+
+        f0_loss = self._calc_f0_loss(f0s, output_f0s)
+        loudness_loss = self._calc_loudness_loss(loudness, output_loudnesses)
+
+        self.loss = f0_loss + loudness_loss
+
+    def _calc_f0_loss(self, gt_f0s, pred_f0s):
+        difference = gt_f0s - pred_f0s
+        return tf.reduce_mean(tf.abs(difference))
+
+    def _calc_loudness_loss(self, gt_lds, pred_lds):
+        difference = gt_lds - pred_lds
+        return tf.reduce_mean(tf.log(tf.abs(difference)))
+
+    def _compute_unit_midi(self, probs):
+        """Computes the midi from a distribution over the unit interval."""
+        # probs: [B, T, D]
+        depth = int(probs[0].shape[-1])
+
+        unit_midi_bins = tf.constant(
+            1.0 * np.arange(depth).reshape((1, 1, -1)) / depth,
+            dtype=tf.float32)  # [1, 1, D]
+
+        f0_unit_midi = [tf.reduce_sum(
+            unit_midi_bins * prob, axis=-1, keepdims=True) for prob in probs]  # [B, T, 1]
+        return f0_unit_midi
 
     def _channel_norm(self, inputs, name):
         # inputs: [batch_size, some len, channel_size]
@@ -109,13 +147,13 @@ class TasNet:
             E = tf.reshape(
                 tf.reduce_mean(inputs, axis=[2]), [-1, self.encoded_len, 1])
             Var = tf.reshape(
-                tf.reduce_mean((inputs - E)**2, axis=[2]),
+                tf.reduce_mean((inputs - E) ** 2, axis=[2]),
                 [-1, self.encoded_len, 1])
             gamma = tf.get_variable(
                 "gamma", shape=[1, 1, channel_size], dtype=self.dtype)
             beta = tf.get_variable(
                 "beta", shape=[1, 1, channel_size], dtype=self.dtype)
-            return ((inputs - E) / (Var + 1e-8)**0.5) * gamma + beta
+            return ((inputs - E) / (Var + 1e-8) ** 0.5) * gamma + beta
 
     def _global_norm(self, inputs, name):
         # inputs: [batch_size, some len, channel_size]
@@ -123,12 +161,12 @@ class TasNet:
             channel_size = inputs.shape[-1]
             E = tf.reshape(tf.reduce_mean(inputs, axis=[1, 2]), [-1, 1, 1])
             Var = tf.reshape(
-                tf.reduce_mean((inputs - E)**2, axis=[1, 2]), [-1, 1, 1])
+                tf.reduce_mean((inputs - E) ** 2, axis=[1, 2]), [-1, 1, 1])
             gamma = tf.get_variable(
                 "gamma", shape=[1, 1, channel_size], dtype=self.dtype)
             beta = tf.get_variable(
                 "beta", shape=[1, 1, channel_size], dtype=self.dtype)
-            return ((inputs - E) / (Var + 1e-8)**0.5) * gamma + beta
+            return ((inputs - E) / (Var + 1e-8) ** 0.5) * gamma + beta
 
     def _depthwise_conv1d(self, inputs, x):
         inputs = tf.reshape(inputs, [-1, 1, self.encoded_len, self.H])
@@ -139,5 +177,5 @@ class TasNet:
             filter=filters,
             strides=[1, 1, 1, 1],
             padding='SAME',
-            rate=[1, 2**x])
+            rate=[1, 2 ** x])
         return tf.reshape(outputs, [-1, self.encoded_len, self.H])

@@ -1,5 +1,7 @@
 =Audio Source Seperation using DDSP
 
+- For the large sections, add a brief overview at the beginning?
+
 ==Abstract (10%). Summarize your work. Briefly introduce the problem, the methods and state the key results.
 
 - Audio Source Seperation using DDSP
@@ -38,24 +40,30 @@ X
 
 (Basically copy some of the implementation ideas)
 - Explain 2-3 options of available approaches to ASS using DDSP, as we saw fit. (Explain theoretical motiviation)
+√
 
 - Describe the dataset (Explain theoritically why it is required the sources to be monophonic, and it should be the same creator, for now. Explain how empirically it is supposed to be enough, according to the original paper where they used just 13 minutes to train).
 	Include explanation of the audio preprocessing process.
-
+√
 
 ==Implementation and experiments (20%). Describe the experiments performed and their configurations, what was compared to what and the evaluation metrics used and why. Explain all implementation details such as model architectures used, data preprocessing/augmentation approaches, loss formulations, training methods and hyperparameter values.
 
 Note: You can use existing code, e.g. in your implementation but specify what you used and which parts you implemented yourself.
 
 - Explain all code relevant to the learning process - this includes abstractically detailed the whole autoencoder model and how Conv-TasNet fits in.
+√
 
-- Explain how the combination of the network works.
+- Explain how the combination of the network works
+√
 
-- Detail the relevant matrics:
+- Explain which code was used and the exact changes we made (including hyperparameters).
+
+- Detail the relevant metrics:
 	Loudness L1 distance (for the TasNet)
 	F0  L1 distance (for the TasNet)
 	The article's mentioned multi-scale spectal loss (for the whole per-instrument reconstruction)
 	CREPE's binary cross entroy loss
+√
 
 - Show experiments to check how well the job was done.
 	Possible test cases:
