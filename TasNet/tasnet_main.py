@@ -123,9 +123,9 @@ if __name__ == '__main__':
                         #logging.warning(f'f0 input shape {inputs[0].shape}')
                         logging.warning(f'f0 output {outputs[0][:, 0, :3]}')
                         #logging.warning(f'f0 output shape {outputs[0].shape}')
-                        logging.warning(f'loudness input {inputs[1][0, :, :3]}')
+                        # logging.warning(f'loudness input {inputs[1][0, :, :3]}')
                         #logging.warning(f'loudness input shape {inputs[1].shape}')
-                        logging.warning(f'loudness output {[l[0, :3] for l in outputs[1]]}')
+                        # logging.warning(f'loudness output {[l[0, :3] for l in outputs[1]]}')
                         #logging.warning(f'loudness output shape {[y.shape for y in outputs[1]]}')
                         train_loss_sum += cur_loss * args.batch_size
                         train_iter_cnt += args.batch_size
