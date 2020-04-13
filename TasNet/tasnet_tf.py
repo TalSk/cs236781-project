@@ -137,7 +137,7 @@ class TasNet:
         self.inputs = (f0s, loudness)
 
     def _calc_f0_loss(self, gt_f0s, pred_f0s):
-        list_difference = [gt_f0s[:, i, :] - pred_f0s[i] for i in range(self.C)]
+        list_difference = [gt_f0s[:, i, :] - pred_f0s[i, :, :] for i in range(self.C)]
         return tf.reduce_mean(tf.abs(list_difference))
 
     def _calc_loudness_loss(self, gt_lds, pred_lds):
