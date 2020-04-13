@@ -30,7 +30,7 @@ if __name__ == '__main__':
             tf.keras.layers.Conv1D(
                 filters=args.N,
                 kernel_size=args.L,
-                strides=args.L // 2,
+                strides=1,#args.L // 2,
                 activation=tf.nn.relu,
                 name="encode_conv1d"),
             "bottleneck":
@@ -62,15 +62,15 @@ if __name__ == '__main__':
         if args.mode == 'train':
             train_model = TasNet("train", train_dataloader, layers, args.C, args.N,
                                  args.L, args.B, args.H, args.P, args.X,
-                                 args.R, args.sample_rate)
+                                 args.R, args.sample_rate, args.frame_rate)
             scope.reuse_variables()
             valid_model = TasNet("valid", valid_dataloader, layers, args.C, args.N,
                                  args.L, args.B, args.H, args.P, args.X,
-                                 args.R, args.sample_rate)
+                                 args.R, args.sample_rate, args.frame_rate)
         else:
             infer_model = TasNet("infer", infer_dataloader, layers, args.C, args.N,
                                  args.L, args.B, args.H, args.P, args.X,
-                                 args.R, args.sample_rate)
+                                 args.R, args.sample_rate, args.frame_rate)
 
     print_num_of_trainable_parameters()
     trainable_variables = tf.trainable_variables()

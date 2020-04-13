@@ -119,7 +119,7 @@ class TasNetDataLoader():
         example = tf.parse_single_example(
             serialized_example,
             features={
-                "mix": tf.VarLenFeature(tf.float32),
+                "mix_audio": tf.VarLenFeature(tf.float32),
 
                 "s1_audio": tf.VarLenFeature(tf.float32),
                 "s1_f0": tf.VarLenFeature(tf.float32),
@@ -134,7 +134,7 @@ class TasNetDataLoader():
                 "s3_loudness": tf.VarLenFeature(tf.float32),
             },
         )
-        mix = tf.sparse_tensor_to_dense(example["mix"])
+        mix = tf.sparse_tensor_to_dense(example["mix_audio"])
 
         s1_audio = tf.sparse_tensor_to_dense(example["s1_audio"])
         s1_f0 = tf.sparse_tensor_to_dense(example["s1_f0"])

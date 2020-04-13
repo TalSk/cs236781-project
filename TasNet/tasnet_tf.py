@@ -4,7 +4,7 @@ import numpy as np
 
 class TasNet:
     def __init__(self, mode, dataloader, layers, n_speaker, N, L, B, H, P, X,
-                 R, sample_rate_hz):
+                 R, sample_rate_hz, frame_rate_hz):
         self.mode = mode
         self.dataloader = dataloader
         self.C = n_speaker
@@ -16,6 +16,7 @@ class TasNet:
         self.X = X
         self.R = R
         self.sample_rate = sample_rate_hz
+        self.frame_rate = frame_rate_hz
         self.dtype = tf.float32
 
         self.layers = layers
@@ -45,8 +46,7 @@ class TasNet:
             # encoded_input: [batch_size, some len, N]
             encoded_input = self.layers["conv1d_encoder"](
                 inputs=tf.expand_dims(input_audio, -1))
-            self.encoded_len = (int(4 * self.sample_rate) - self.L) // (
-                    self.L // 2) + 1
+            self.encoded_len = (int(4 * self.sample_rate)) # - self.L) // (self.L // 2) + 1
 
         with tf.variable_scope("bottleneck"):
             # norm_input: [batch_size, some len, N]
@@ -78,14 +78,26 @@ class TasNet:
             self.layers["1x1_conv_decoder_{}".format(i)](block_output)
             for i in range(self.C)
         ]
+
         # softmax
         probs = tf.nn.softmax(tf.stack(sep_output_list, axis=-1))
         prob_list = tf.unstack(probs, axis=-1)
 
+        # C, B, T, N
         sep_output_list = [mask * encoded_input for mask in prob_list]
 
-        sep_output_list = [
-            (self.layers["f0_deconv"](sep_output), self.layers["loudness_deconv"](sep_output))
+        # C, B, T, 128
+        f0_deconved = [
+            self.layers["f0_deconv"](sep_output)
+            for sep_output in sep_output_list
+        ]
+        # C, B, F, 128
+        print(f0_deconved)
+        f0_deconved = f0_deconved[:,:,(self.sample_rate // self.frame_rate),:]
+
+        # C, B, T
+        loudness_deconved = [
+            tf.squeeze(self.layers["loudness_deconv"](sep_output), axis=-1)
             for sep_output in sep_output_list
         ]
 
@@ -104,15 +116,14 @@ class TasNet:
 
         # sdr = tf.maximum(sdr1, sdr2)
         # self.loss = tf.reduce_mean(-sdr) / self.C
-        probs = [tf.nn.softplus(y[0]) + 1e-3 for y in sep_output_list]
+        probs = [tf.nn.softplus(y) + 1e-3 for y in f0_deconved]
         probs = [prob / tf.reduce_sum(prob, axis=-1, keepdims=True) for prob in probs]
-        output_f0s = self._compute_unit_midi(probs)
-        output_loudnesses = [lds for _, lds in sep_output_list]
+        output_f0s = tf.squeeze(self._compute_unit_midi(probs), axis=-1)
 
-        self.outputs = []
+        # C, B, F
+        output_loudnesses = loudness_deconved[:,:,self.sample_rate // self.frame_rate,:]
 
-        for i in range(len(output_f0s)):
-            self.outputs += [output_f0s[i], output_loudnesses[i]]
+        self.outputs = (output_f0s, output_loudnesses)
 
         f0_loss = self._calc_f0_loss(f0s, output_f0s)
         loudness_loss = self._calc_loudness_loss(loudness, output_loudnesses)
@@ -120,12 +131,12 @@ class TasNet:
         self.loss = f0_loss + loudness_loss
 
     def _calc_f0_loss(self, gt_f0s, pred_f0s):
-        list_difference = [gt_f0s[:, i, :] - pred_f0s[i] for i in range(3)]
+        list_difference = [gt_f0s[:, i, :] - pred_f0s[i,:] for i in range(self.C)]
         difference = sum(list_difference)
         return tf.reduce_mean(tf.abs(difference))
 
     def _calc_loudness_loss(self, gt_lds, pred_lds):
-        list_difference = [gt_lds[:, i, :] - pred_lds[i] for i in range(3)]
+        list_difference = [gt_lds[:, i, :] - pred_lds[i,:] for i in range(self.C)]
         difference = sum(list_difference)
         return tf.reduce_mean(tf.abs(difference))
 
