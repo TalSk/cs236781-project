@@ -136,16 +136,13 @@ class TasNet:
         self.loss = f0_loss + loudness_loss
         self.inputs = (f0s, loudness)
 
-
     def _calc_f0_loss(self, gt_f0s, pred_f0s):
         list_difference = [gt_f0s[:, i, :] - pred_f0s[i] for i in range(self.C)]
-        difference = sum(list_difference)
-        return tf.reduce_mean(tf.abs(difference))
+        return tf.reduce_mean(tf.abs(list_difference))
 
     def _calc_loudness_loss(self, gt_lds, pred_lds):
         list_difference = [gt_lds[:, i, :] - pred_lds[i] for i in range(self.C)]
-        difference = sum(list_difference)
-        return tf.reduce_mean(tf.abs(difference))
+        return tf.reduce_mean(tf.abs(list_difference))
 
     def _compute_f0_hz(self, probs):
         """Computes the f0 in herz from a distribution over D MIDI intervals."""
