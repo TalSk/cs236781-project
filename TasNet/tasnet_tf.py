@@ -134,6 +134,7 @@ class TasNet:
         loudness_loss = self._calc_loudness_loss(loudness, output_loudnesses)
 
         self.loss = f0_loss + loudness_loss
+        self.inputs = (f0s, loudness)
 
 
     def _calc_f0_loss(self, gt_f0s, pred_f0s):

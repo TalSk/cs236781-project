@@ -1,4 +1,5 @@
 import os
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow.compat.v1 as tf
 import librosa
@@ -9,10 +10,9 @@ from tasnet_tf import TasNet
 from tasnet_utils import *
 from tasnet_dataloader import TasNetDataLoader
 
-
 if __name__ == '__main__':
     tf.disable_eager_execution()
-    
+
     args, logger = setup()
     global_step = tf.Variable(0, trainable=False, name="global_step")
     if args.mode == 'train':
@@ -27,22 +27,22 @@ if __name__ == '__main__':
     with tf.variable_scope("model") as scope:
         layers = {
             "conv1d_encoder":
-            tf.keras.layers.Conv1D(
-                filters=args.N,
-                kernel_size=args.L,
-                strides=args.L,#args.L // 2,
-                activation=tf.nn.relu,
-                name="encode_conv1d"),
+                tf.keras.layers.Conv1D(
+                    filters=args.N,
+                    kernel_size=args.L,
+                    strides=args.L,  # args.L // 2,
+                    activation=tf.nn.relu,
+                    name="encode_conv1d"),
             "bottleneck":
-            tf.keras.layers.Conv1D(args.B, 1, 1),
+                tf.keras.layers.Conv1D(args.B, 1, 1),
             "1d_deconv":
-            tf.keras.layers.Dense(args.L, use_bias=False),
+                tf.keras.layers.Dense(args.L, use_bias=False),
             "f0_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * args.N, activation="relu", use_bias=False),
                                               tf.keras.layers.Dense(2 * args.N, activation="relu", use_bias=False),
                                               tf.keras.layers.Dense(128, activation="relu", use_bias=False))),
             "loudness_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * args.N, use_bias=False),
-                                              tf.keras.layers.Dense(2 * args.N, use_bias=False),
-                                              tf.keras.layers.Dense(1, use_bias=False)))
+                                                    tf.keras.layers.Dense(2 * args.N, use_bias=False),
+                                                    tf.keras.layers.Dense(1, use_bias=False)))
         }
         for i in range(args.C):
             layers["1x1_conv_decoder_{}".format(i)] = \
@@ -86,7 +86,9 @@ if __name__ == '__main__':
 
     saver = tf.train.Saver()
 
-    config = tf.ConfigProto()
+    config = tf.ConfigProto(
+        device_count={'GPU': 0}
+    )
     config.allow_soft_placement = True
     with tf.Session(config=config) as sess:
 
@@ -111,18 +113,23 @@ if __name__ == '__main__':
                 train_iter_cnt, train_loss_sum = 0, 0
                 while True:
                     try:
-                        cur_loss, _, cur_global_step =\
+                        cur_loss, _, cur_global_step, outputs, inputs = \
                             sess.run(
-                                fetches=[train_model.loss, update, global_step],
+                                fetches=[train_model.loss, update, global_step, train_model.outputs,
+                                         train_model.inputs],
                                 feed_dict={learning_rate: lr}
                             )
+                        #logging.warning(f'f0 input {inputs[0][:5]}')
+                        #logging.warning(f'f0 output {outputs[0][:5]}')
+                        #logging.warning(f'loudness input {inputs[1][:5]}')
+                        #logging.warning(f'loudness output {outputs[1][:5]}')
                         train_loss_sum += cur_loss * args.batch_size
                         train_iter_cnt += args.batch_size
                     except tf.errors.OutOfRangeError:
                         logging.info(
                             'step = {} , train loss = {:5f} , lr = {:5f}'.
-                            format(cur_global_step,
-                                   train_loss_sum / train_iter_cnt, lr))
+                                format(cur_global_step,
+                                       train_loss_sum / train_iter_cnt, lr))
                         break
 
                 sess.run(valid_dataloader.iterator.initializer)
@@ -134,7 +141,7 @@ if __name__ == '__main__':
                         valid_iter_cnt += args.batch_size
                     except tf.errors.OutOfRangeError:
                         epoch_loss = (valid_loss_sum / valid_iter_cnt)
-                        
+
                         if epoch_loss >= prev_loss:
                             no_improve_count += 1
                             if no_improve_count >= 3:
@@ -159,7 +166,7 @@ if __name__ == '__main__':
                     cur_loss, outputs, single_audios, cur_global_step = sess.run(
                         fetches=[
                             infer_model.loss, infer_model.outputs, infer_model.
-                            single_audios, global_step
+                                single_audios, global_step
                         ])
 
                     now_dir = args.log_dir + "/test/" + str(
@@ -173,12 +180,14 @@ if __name__ == '__main__':
                         for single_audio in single_audios
                     ]
 
+
                     def write(inputs, filename):
                         librosa.output.write_wav(
                             now_dir + filename,
                             inputs,
                             args.sample_rate,
                             norm=True)
+
 
                     # write(outputs[0], 's1.wav')
                     # write(outputs[1], 's2.wav')
@@ -194,4 +203,3 @@ if __name__ == '__main__':
                     logging.info('step = {} , infer SDR = {:5f}'.format(
                         cur_global_step, -infer_loss_sum / infer_iter_cnt))
                     break
-
