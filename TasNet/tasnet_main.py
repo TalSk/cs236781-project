@@ -119,10 +119,10 @@ if __name__ == '__main__':
                                          train_model.inputs],
                                 feed_dict={learning_rate: lr}
                             )
-                        #logging.warning(f'f0 input {inputs[0][:5]}')
-                        #logging.warning(f'f0 output {outputs[0][:5]}')
-                        #logging.warning(f'loudness input {inputs[1][:5]}')
-                        #logging.warning(f'loudness output {outputs[1][:5]}')
+                        logging.warning(f'f0 input {inputs[0][:3]}')
+                        logging.warning(f'f0 output {outputs[0][:3]}')
+                        logging.warning(f'loudness input {inputs[1][:3]}')
+                        logging.warning(f'loudness output {outputs[1][:3]}')
                         train_loss_sum += cur_loss * args.batch_size
                         train_iter_cnt += args.batch_size
                     except tf.errors.OutOfRangeError:
