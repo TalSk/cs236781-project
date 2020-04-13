@@ -1,6 +1,6 @@
 import tensorflow.compat.v1 as tf
 import numpy as np
-
+import ddsp
 
 class TasNet:
     def __init__(self, mode, dataloader, layers, n_speaker, N, L, B, H, P, X,
@@ -84,7 +84,7 @@ class TasNet:
         prob_list = tf.unstack(probs, axis=-1)
 
         # C, B, T, N
-        sep_output_list = [mask * encoded_input for mask in prob_list]
+        sep_output_list = prob_list #[mask * encoded_input for mask in prob_list]
 
         # C, B, T, 128
         f0_deconved = [
@@ -92,15 +92,18 @@ class TasNet:
             for sep_output in sep_output_list
         ]
 
+        T_TO_F = (self.sample_rate // self.frame_rate) // self.L
         # C, B, F, 128
-        #f0_deconved = [y[:, ::(self.sample_rate // self.frame_rate), :] for y in f0_deconved]
+        if T_TO_F > 1:
+            f0_deconved = [y[:, ::T_TO_F, :] for y in f0_deconved]
 
         # C, B, T
         loudness_deconved = [
             tf.squeeze(self.layers["loudness_deconv"](sep_output), axis=-1)
             for sep_output in sep_output_list
         ]
-        #loudness_deconved = [y[:, ::(self.sample_rate // self.frame_rate)] for y in loudness_deconved]
+        if T_TO_F > 1:
+            loudness_deconved = [y[:, ::T_TO_F] for y in loudness_deconved]
 
         # self.outputs = outputs = [
         #     tf.signal.overlap_and_add(
@@ -119,7 +122,7 @@ class TasNet:
         # self.loss = tf.reduce_mean(-sdr) / self.C
         probs = [tf.nn.softplus(y) + 1e-3 for y in f0_deconved]
         probs = [prob / tf.reduce_sum(prob, axis=-1, keepdims=True) for prob in probs]
-        output_f0s = tf.squeeze(self._compute_unit_midi(probs), axis=-1)
+        output_f0s = tf.squeeze(self._compute_midi(probs), axis=-1)
 
         # C, B, F
         output_loudnesses = loudness_deconved
@@ -143,18 +146,19 @@ class TasNet:
         difference = sum(list_difference)
         return tf.reduce_mean(tf.abs(difference))
 
-    def _compute_unit_midi(self, probs):
-        """Computes the midi from a distribution over the unit interval."""
+    def _compute_midi(self, probs):
+        """Computes the midi from a distribution over D intervals."""
         # probs: [B, T, D]
         depth = int(probs[0].shape[-1])
 
-        unit_midi_bins = tf.constant(
-            1.0 * np.arange(depth).reshape((1, 1, -1)) / depth,
+        midi_bins = tf.constant(
+            1.0 * np.arange(depth).reshape((1, 1, -1)),
             dtype=tf.float32)  # [1, 1, D]
+        midi_bins = tf.map_fn(ddsp.core.midi_to_hz, midi_bins)
 
-        f0_unit_midi = [tf.reduce_sum(
-            unit_midi_bins * prob, axis=-1, keepdims=True) for prob in probs]  # [B, T, 1]
-        return f0_unit_midi
+        f0_midi = [tf.reduce_sum(
+            midi_bins * prob, axis=-1, keepdims=True) for prob in probs]  # [B, T, 1]
+        return f0_midi
 
     def _channel_norm(self, inputs, name):
         # inputs: [batch_size, some len, channel_size]
