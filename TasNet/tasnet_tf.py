@@ -52,7 +52,7 @@ class TasNet:
             # norm_input: [batch_size, some len, N]
             norm_input = self._channel_norm(encoded_input, "bottleneck")
 
-            # block_inptu: [batch_size, some len, B]
+            # block_input: [batch_size, some len, B]
             block_input = self.layers["bottleneck"](norm_input)
 
         for r in range(self.R):
@@ -91,15 +91,16 @@ class TasNet:
             self.layers["f0_deconv"](sep_output)
             for sep_output in sep_output_list
         ]
+
         # C, B, F, 128
-        print(f0_deconved)
-        f0_deconved = f0_deconved[:,:,(self.sample_rate // self.frame_rate),:]
+        f0_deconved = [y[:, ::(self.sample_rate // self.frame_rate), :] for y in f0_deconved]
 
         # C, B, T
         loudness_deconved = [
             tf.squeeze(self.layers["loudness_deconv"](sep_output), axis=-1)
             for sep_output in sep_output_list
         ]
+        loudness_deconved = [y[:, ::(self.sample_rate // self.frame_rate)] for y in loudness_deconved]
 
         # self.outputs = outputs = [
         #     tf.signal.overlap_and_add(
@@ -121,22 +122,24 @@ class TasNet:
         output_f0s = tf.squeeze(self._compute_unit_midi(probs), axis=-1)
 
         # C, B, F
-        output_loudnesses = loudness_deconved[:,:,self.sample_rate // self.frame_rate,:]
+        output_loudnesses = loudness_deconved
 
         self.outputs = (output_f0s, output_loudnesses)
 
         f0_loss = self._calc_f0_loss(f0s, output_f0s)
+
         loudness_loss = self._calc_loudness_loss(loudness, output_loudnesses)
 
         self.loss = f0_loss + loudness_loss
 
+
     def _calc_f0_loss(self, gt_f0s, pred_f0s):
-        list_difference = [gt_f0s[:, i, :] - pred_f0s[i,:] for i in range(self.C)]
+        list_difference = [gt_f0s[:, i, :] - pred_f0s[i] for i in range(self.C)]
         difference = sum(list_difference)
         return tf.reduce_mean(tf.abs(difference))
 
     def _calc_loudness_loss(self, gt_lds, pred_lds):
-        list_difference = [gt_lds[:, i, :] - pred_lds[i,:] for i in range(self.C)]
+        list_difference = [gt_lds[:, i, :] - pred_lds[i] for i in range(self.C)]
         difference = sum(list_difference)
         return tf.reduce_mean(tf.abs(difference))
 
