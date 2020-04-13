@@ -87,7 +87,7 @@ if __name__ == '__main__':
     saver = tf.train.Saver()
 
     config = tf.ConfigProto(
-       # device_count={'GPU': 0}
+      #  device_count={'GPU': 0}
     )
     config.allow_soft_placement = True
     with tf.Session(config=config) as sess:
@@ -149,7 +149,7 @@ if __name__ == '__main__':
                         if epoch_loss >= prev_loss:
                             no_improve_count += 1
                             if no_improve_count >= 3:
-                                lr *= 0.8
+                                lr *= args.learning_rate_decrease
                         else:
                             no_improve_count = 0
                         prev_loss = epoch_loss
