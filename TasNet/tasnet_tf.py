@@ -84,7 +84,7 @@ class TasNet:
         prob_list = tf.unstack(probs, axis=-1)
 
         # C, B, T, N
-        sep_output_list = prob_list #[mask * encoded_input for mask in prob_list]
+        sep_output_list = [mask * encoded_input for mask in prob_list]
 
         # C, B, T, 128
         f0_deconved = [

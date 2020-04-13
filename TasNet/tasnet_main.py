@@ -121,7 +121,7 @@ if __name__ == '__main__':
                         logging.info(
                             'step = {} , train loss = {:5f} , lr = {:5f}'.
                             format(cur_global_step,
-                                   -train_loss_sum / train_iter_cnt, lr))
+                                   train_loss_sum / train_iter_cnt, lr))
                         break
 
                 sess.run(valid_dataloader.iterator.initializer)
@@ -132,11 +132,11 @@ if __name__ == '__main__':
                         valid_loss_sum += cur_loss * args.batch_size
                         valid_iter_cnt += args.batch_size
                     except tf.errors.OutOfRangeError:
-                        cur_sdr = -(valid_loss_sum / valid_iter_cnt)
+                        cur_sdr = (valid_loss_sum / valid_iter_cnt)
 
                         valid_scores.append(cur_sdr)
                         if max(valid_scores[-3:]) < valid_sdr:
-                            lr /= 2
+                            lr *= 0.7
 
                         logging.info('validation loss = {:5f}'.format(cur_sdr))
                         if cur_sdr > valid_sdr:
