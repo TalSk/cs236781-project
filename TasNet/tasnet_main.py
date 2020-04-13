@@ -30,7 +30,7 @@ if __name__ == '__main__':
             tf.keras.layers.Conv1D(
                 filters=args.N,
                 kernel_size=args.L,
-                strides=1,#args.L // 2,
+                strides=args.L,#args.L // 2,
                 activation=tf.nn.relu,
                 name="encode_conv1d"),
             "bottleneck":

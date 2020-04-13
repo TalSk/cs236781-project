@@ -46,7 +46,7 @@ class TasNet:
             # encoded_input: [batch_size, some len, N]
             encoded_input = self.layers["conv1d_encoder"](
                 inputs=tf.expand_dims(input_audio, -1))
-            self.encoded_len = (int(4 * self.sample_rate)) # - self.L) // (self.L // 2) + 1
+            self.encoded_len = int(4 * self.sample_rate // self.L) # - self.L) // (self.L // 2) + 1
 
         with tf.variable_scope("bottleneck"):
             # norm_input: [batch_size, some len, N]
@@ -93,14 +93,14 @@ class TasNet:
         ]
 
         # C, B, F, 128
-        f0_deconved = [y[:, ::(self.sample_rate // self.frame_rate), :] for y in f0_deconved]
+        #f0_deconved = [y[:, ::(self.sample_rate // self.frame_rate), :] for y in f0_deconved]
 
         # C, B, T
         loudness_deconved = [
             tf.squeeze(self.layers["loudness_deconv"](sep_output), axis=-1)
             for sep_output in sep_output_list
         ]
-        loudness_deconved = [y[:, ::(self.sample_rate // self.frame_rate)] for y in loudness_deconved]
+        #loudness_deconved = [y[:, ::(self.sample_rate // self.frame_rate)] for y in loudness_deconved]
 
         # self.outputs = outputs = [
         #     tf.signal.overlap_and_add(
