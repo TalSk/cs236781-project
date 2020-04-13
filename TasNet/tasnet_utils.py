@@ -45,7 +45,7 @@ def setup():
     parser.add_argument('-mo', '--mode', type=str, default='train')
     parser.add_argument('-sr', '--sample_rate', type=int, default=16000)
     parser.add_argument('-fr', '--frame_rate', type=int, default=250)
-    parser.add_argument('-lrd', '--learning_rate_decrease', type=int, default=0.8)
+    parser.add_argument('-lrd', '--learning_rate_decrease', type=float, default=0.8)
 
     parser.add_argument('-N', '-N', type=int, default=128)
     parser.add_argument('-L', '-L', type=int, default=64)
