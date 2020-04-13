@@ -122,7 +122,7 @@ class TasNet:
         # self.loss = tf.reduce_mean(-sdr) / self.C
         probs = [tf.nn.softplus(y) + 1e-3 for y in f0_deconved]
         probs = [prob / tf.reduce_sum(prob, axis=-1, keepdims=True) for prob in probs]
-        output_f0s = tf.squeeze(self._compute_midi(probs), axis=-1)
+        output_f0s = tf.squeeze(self._compute_f0_hz(probs), axis=-1)
 
         # C, B, F
         output_loudnesses = loudness_deconved
@@ -146,19 +146,19 @@ class TasNet:
         difference = sum(list_difference)
         return tf.reduce_mean(tf.abs(difference))
 
-    def _compute_midi(self, probs):
-        """Computes the midi from a distribution over D intervals."""
+    def _compute_f0_hz(self, probs):
+        """Computes the f0 in herz from a distribution over D MIDI intervals."""
         # probs: [B, T, D]
         depth = int(probs[0].shape[-1])
 
         midi_bins = tf.constant(
-            1.0 * np.arange(depth).reshape((1, 1, -1)),
+            1.0 * np.arange(depth).reshape((1, 1, -1)) / depth,
             dtype=tf.float32)  # [1, 1, D]
-        midi_bins = tf.map_fn(ddsp.core.midi_to_hz, midi_bins)
 
-        f0_midi = [tf.reduce_sum(
-            midi_bins * prob, axis=-1, keepdims=True) for prob in probs]  # [B, T, 1]
-        return f0_midi
+        f0_hz = [ddsp.core.midi_to_hz(
+            127.0 * tf.reduce_sum(
+            midi_bins * prob, axis=-1, keepdims=True)) for prob in probs]  # [B, T, 1]
+        return f0_hz
 
     def _channel_norm(self, inputs, name):
         # inputs: [batch_size, some len, channel_size]

@@ -37,9 +37,9 @@ if __name__ == '__main__':
             tf.keras.layers.Conv1D(args.B, 1, 1),
             "1d_deconv":
             tf.keras.layers.Dense(args.L, use_bias=False),
-            "f0_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * args.N, use_bias=False),
-                                              tf.keras.layers.Dense(2 * args.N, use_bias=False),
-                                              tf.keras.layers.Dense(128, use_bias=False))),
+            "f0_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * args.N, activation="relu", use_bias=False),
+                                              tf.keras.layers.Dense(2 * args.N, activation="relu", use_bias=False),
+                                              tf.keras.layers.Dense(128, activation="relu", use_bias=False))),
             "loudness_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * args.N, use_bias=False),
                                               tf.keras.layers.Dense(2 * args.N, use_bias=False),
                                               tf.keras.layers.Dense(1, use_bias=False)))
@@ -100,7 +100,8 @@ if __name__ == '__main__':
 
         if args.mode == 'train':
             lr = args.learning_rate
-            valid_scores = [-1] * 2
+            no_improve_count = 0
+            prev_loss = 2000
 
             for epoch in range(1, args.max_epoch + 1):
 
@@ -132,15 +133,19 @@ if __name__ == '__main__':
                         valid_loss_sum += cur_loss * args.batch_size
                         valid_iter_cnt += args.batch_size
                     except tf.errors.OutOfRangeError:
-                        cur_sdr = (valid_loss_sum / valid_iter_cnt)
+                        epoch_loss = (valid_loss_sum / valid_iter_cnt)
+                        
+                        if epoch_loss >= prev_loss:
+                            no_improve_count += 1
+                            if no_improve_count >= 3:
+                                lr *= 0.8
+                        else:
+                            no_improve_count = 0
+                        prev_loss = epoch_loss
 
-                        valid_scores.append(cur_sdr)
-                        if max(valid_scores[-3:]) < valid_sdr:
-                            lr *= 0.7
-
-                        logging.info('validation loss = {:5f}'.format(cur_sdr))
-                        if cur_sdr > valid_sdr:
-                            valid_sdr = cur_sdr
+                        logging.info('validation loss = {:5f}'.format(epoch_loss))
+                        if epoch_loss < valid_sdr:
+                            valid_sdr = epoch_loss
                             saver.save(
                                 sess,
                                 args.checkpoint_path,

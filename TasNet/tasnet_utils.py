@@ -25,7 +25,7 @@ def print_num_of_trainable_parameters():
 
 def read_log(log_file):
     lines = open(log_file, 'r').read().splitlines()
-    best_sdr = -1000
+    best_sdr = 2000
     best_step = 0
     for line in lines:
         if 'validation SDR' in line:
