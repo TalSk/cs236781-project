@@ -3,8 +3,8 @@ import numpy as np
 import ddsp
 
 class TasNet:
-    def __init__(self, mode, dataloader, layers, n_speaker, N, L, B, H, P, X,
-                 R, sample_rate_hz, frame_rate_hz, weight_f0):
+    def __init__(self, mode, dataloader, n_speaker, N, L, B, H, P, X,
+                 R, sample_rate_hz, frame_rate_hz, weight_f0, layers=None):
         self.mode = mode
         self.dataloader = dataloader
         
@@ -23,7 +23,10 @@ class TasNet:
 
         self.dtype = tf.float32
 
-        self.layers = layers
+        if layers == None:
+            self.layers = self.build_layers()
+        else:
+            self.layers = layers
 
         self._build_graph()
 
@@ -36,6 +39,48 @@ class TasNet:
         upp = norm(s_target)
         low = norm(s_hat - s_target)
         return 10 * tf.log(upp / low) / tf.log(10.0)
+
+    def build_layers(self):
+        layers = {
+            "conv1d_encoder":
+                tf.keras.layers.Conv1D(
+                    filters=self.N,
+                    kernel_size=self.L,
+                    strides=self.L,
+                    activation=tf.nn.relu,
+                    name="encode_conv1d"),
+            "bottleneck":
+                tf.keras.layers.Conv1D(self.B, 1, 1),
+            "1d_deconv":
+                tf.keras.layers.Dense(self.L, use_bias=False),
+            "f0_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * self.N, activation="relu", use_bias=False),
+                                              tf.keras.layers.LayerNormalization(),
+                                              tf.keras.layers.Dense(2 * self.N, activation="relu", use_bias=False),
+                                              tf.keras.layers.LayerNormalization(),
+                                              tf.keras.layers.Dense(128, activation="relu", use_bias=False),
+                                              tf.keras.layers.LayerNormalization()
+                                              )),
+            "loudness_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * self.N, activation="relu", use_bias=False),
+                                                    tf.keras.layers.LayerNormalization(),
+                                                    tf.keras.layers.Dense(2 * self.N, activation="relu", use_bias=False),
+                                                    tf.keras.layers.LayerNormalization(),
+                                                    tf.keras.layers.Dense(1, use_bias=False)))
+        }
+        for i in range(self.C):
+            layers["1x1_conv_decoder_{}".format(i)] = \
+                tf.keras.layers.Conv1D(self.N, 1, 1)
+        for r in range(self.R):
+            for x in range(self.X):
+                now_block = "block_{}_{}_".format(r, x)
+                layers[now_block + "first_1x1_conv"] = tf.keras.layers.Conv1D(
+                    filters=self.H, kernel_size=1)
+                layers[now_block + "first_PReLU"] = tf.keras.layers.PReLU(
+                    shared_axes=[1])
+                layers[now_block + "second_PReLU"] = tf.keras.layers.PReLU(
+                    shared_axes=[1])
+                layers[now_block + "second_1x1_conv"] = tf.keras.layers.Conv1D(
+                    filters=self.B, kernel_size=1)
+        return layers
 
     def _build_graph(self):
         # audios: [batch_size, max_len]

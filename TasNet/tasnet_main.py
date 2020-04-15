@@ -10,7 +10,7 @@ from tasnet_tf import TasNet
 from tasnet_utils import *
 from tasnet_dataloader import TasNetDataLoader
 
-if __name__ == '__main__':
+def main():
     tf.disable_eager_execution()
 
     args, logger = setup()
@@ -25,56 +25,17 @@ if __name__ == '__main__':
                                             args.batch_size, args.sample_rate, args.frame_rate)
 
     with tf.variable_scope("model") as scope:
-        layers = {
-            "conv1d_encoder":
-                tf.keras.layers.Conv1D(
-                    filters=args.N,
-                    kernel_size=args.L,
-                    strides=args.L,
-                    activation=tf.nn.relu,
-                    name="encode_conv1d"),
-            "bottleneck":
-                tf.keras.layers.Conv1D(args.B, 1, 1),
-            "1d_deconv":
-                tf.keras.layers.Dense(args.L, use_bias=False),
-            "f0_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * args.N, activation="relu", use_bias=False),
-                                              tf.keras.layers.LayerNormalization(),
-                                              tf.keras.layers.Dense(2 * args.N, activation="relu", use_bias=False),
-                                              tf.keras.layers.LayerNormalization(),
-                                              tf.keras.layers.Dense(128, activation="relu", use_bias=False),
-                                              tf.keras.layers.LayerNormalization()
-                                              )),
-            "loudness_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * args.N, activation="relu", use_bias=False),
-                                                    tf.keras.layers.LayerNormalization(),
-                                                    tf.keras.layers.Dense(2 * args.N, activation="relu", use_bias=False),
-                                                    tf.keras.layers.LayerNormalization(),
-                                                    tf.keras.layers.Dense(1, use_bias=False)))
-        }
-        for i in range(args.C):
-            layers["1x1_conv_decoder_{}".format(i)] = \
-                tf.keras.layers.Conv1D(args.N, 1, 1)
-        for r in range(args.R):
-            for x in range(args.X):
-                now_block = "block_{}_{}_".format(r, x)
-                layers[now_block + "first_1x1_conv"] = tf.keras.layers.Conv1D(
-                    filters=args.H, kernel_size=1)
-                layers[now_block + "first_PReLU"] = tf.keras.layers.PReLU(
-                    shared_axes=[1])
-                layers[now_block + "second_PReLU"] = tf.keras.layers.PReLU(
-                    shared_axes=[1])
-                layers[now_block + "second_1x1_conv"] = tf.keras.layers.Conv1D(
-                    filters=args.B, kernel_size=1)
-
         if args.mode == 'train':
-            train_model = TasNet("train", train_dataloader, layers, args.C, args.N,
+            train_model = TasNet("train", train_dataloader, args.C, args.N,
                                  args.L, args.B, args.H, args.P, args.X,
                                  args.R, args.sample_rate, args.frame_rate, args.weight_f0)
             scope.reuse_variables()
-            valid_model = TasNet("valid", valid_dataloader, layers, args.C, args.N,
+            valid_model = TasNet("valid", valid_dataloader, args.C, args.N,
                                  args.L, args.B, args.H, args.P, args.X,
-                                 args.R, args.sample_rate, args.frame_rate, args.weight_f0)
+                                 args.R, args.sample_rate, args.frame_rate, args.weight_f0,
+                                 layers=train_model.layers)
         else:
-            infer_model = TasNet("infer", infer_dataloader, layers, args.C, args.N,
+            infer_model = TasNet("infer", infer_dataloader, args.C, args.N,
                                  args.L, args.B, args.H, args.P, args.X,
                                  args.R, args.sample_rate, args.frame_rate, args.weight_f0)
 
@@ -213,3 +174,6 @@ if __name__ == '__main__':
                     logging.info('step = {} , infer SDR = {:5f}'.format(
                         cur_global_step, -infer_loss_sum / infer_iter_cnt))
                     break
+
+if __name__ == '__main__':
+    main()

@@ -46,7 +46,7 @@ def setup():
     parser.add_argument('-mo', '--mode', type=str, default='train')
     parser.add_argument('-sr', '--sample_rate', type=int, default=16000)
     parser.add_argument('-fr', '--frame_rate', type=int, default=250)
-    parser.add_argument('-w', '--weight_f0', type=float, default=0.2)
+    parser.add_argument('-w', '--weight_f0', type=float, default=0.1)
     parser.add_argument('-g', '--use_gpu', type=int, default=1)
 
     parser.add_argument('-N', '-N', type=int, default=128)
