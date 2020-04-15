@@ -154,7 +154,7 @@ class TasNet:
             dtype=tf.float32)  # [1, 1, D]
 
         f0_hz = [ddsp.core.midi_to_hz(
-            127.0 * tf.reduce_sum(
+            (depth-1.0) * tf.reduce_sum(
             midi_bins * prob, axis=-1, keepdims=True)) for prob in probs]  # [B, T, 1]
         return f0_hz
 

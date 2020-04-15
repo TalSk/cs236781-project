@@ -38,8 +38,12 @@ if __name__ == '__main__':
             "1d_deconv":
                 tf.keras.layers.Dense(args.L, use_bias=False),
             "f0_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * args.N, activation="relu", use_bias=False),
+                                              tf.keras.layers.LayerNormalization(),
                                               tf.keras.layers.Dense(2 * args.N, activation="relu", use_bias=False),
-                                              tf.keras.layers.Dense(128, activation="relu", use_bias=False))),
+                                              tf.keras.layers.LayerNormalization(),
+                                              tf.keras.layers.Dense(128, activation="relu", use_bias=False),
+                                              tf.keras.layers.LayerNormalization()
+                                              )),
             "loudness_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * args.N, use_bias=False),
                                                     tf.keras.layers.Dense(2 * args.N, use_bias=False),
                                                     tf.keras.layers.Dense(1, use_bias=False)))
