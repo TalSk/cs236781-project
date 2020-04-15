@@ -4,9 +4,10 @@ import ddsp
 
 class TasNet:
     def __init__(self, mode, dataloader, layers, n_speaker, N, L, B, H, P, X,
-                 R, sample_rate_hz, frame_rate_hz):
+                 R, sample_rate_hz, frame_rate_hz, weight_f0):
         self.mode = mode
         self.dataloader = dataloader
+        
         self.C = n_speaker
         self.N = N
         self.L = L
@@ -15,8 +16,11 @@ class TasNet:
         self.P = P
         self.X = X
         self.R = R
+
         self.sample_rate = sample_rate_hz
         self.frame_rate = frame_rate_hz
+        self.weight_f0 = weight_f0
+
         self.dtype = tf.float32
 
         self.layers = layers
@@ -130,10 +134,9 @@ class TasNet:
         self.outputs = (output_f0s, output_loudnesses)
 
         f0_loss = self._calc_f0_loss(f0s, output_f0s)
+        loudness_loss = self._calc_loudness_loss(loudness, output_loudnesses)
 
-        # loudness_loss = self._calc_loudness_loss(loudness, output_loudnesses)
-
-        self.loss = f0_loss  # + loudness_loss
+        self.loss = self.weight_f0 * f0_loss + (1.0 - self.weight_f0) * loudness_loss
         self.inputs = (f0s, loudness)
 
     def _calc_f0_loss(self, gt_f0s, pred_f0s):

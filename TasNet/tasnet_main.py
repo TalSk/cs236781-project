@@ -30,7 +30,7 @@ if __name__ == '__main__':
                 tf.keras.layers.Conv1D(
                     filters=args.N,
                     kernel_size=args.L,
-                    strides=args.L,  # args.L // 2,
+                    strides=args.L,
                     activation=tf.nn.relu,
                     name="encode_conv1d"),
             "bottleneck":
@@ -44,8 +44,10 @@ if __name__ == '__main__':
                                               tf.keras.layers.Dense(128, activation="relu", use_bias=False),
                                               tf.keras.layers.LayerNormalization()
                                               )),
-            "loudness_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * args.N, use_bias=False),
-                                                    tf.keras.layers.Dense(2 * args.N, use_bias=False),
+            "loudness_deconv": tf.keras.Sequential((tf.keras.layers.Dense(2 * args.N, activation="relu", use_bias=False),
+                                                    tf.keras.layers.LayerNormalization(),
+                                                    tf.keras.layers.Dense(2 * args.N, activation="relu", use_bias=False),
+                                                    tf.keras.layers.LayerNormalization(),
                                                     tf.keras.layers.Dense(1, use_bias=False)))
         }
         for i in range(args.C):
@@ -66,15 +68,15 @@ if __name__ == '__main__':
         if args.mode == 'train':
             train_model = TasNet("train", train_dataloader, layers, args.C, args.N,
                                  args.L, args.B, args.H, args.P, args.X,
-                                 args.R, args.sample_rate, args.frame_rate)
+                                 args.R, args.sample_rate, args.frame_rate, args.weight_f0)
             scope.reuse_variables()
             valid_model = TasNet("valid", valid_dataloader, layers, args.C, args.N,
                                  args.L, args.B, args.H, args.P, args.X,
-                                 args.R, args.sample_rate, args.frame_rate)
+                                 args.R, args.sample_rate, args.frame_rate, args.weight_f0)
         else:
             infer_model = TasNet("infer", infer_dataloader, layers, args.C, args.N,
                                  args.L, args.B, args.H, args.P, args.X,
-                                 args.R, args.sample_rate, args.frame_rate)
+                                 args.R, args.sample_rate, args.frame_rate, args.weight_f0)
 
     print_num_of_trainable_parameters()
     trainable_variables = tf.trainable_variables()
@@ -91,7 +93,7 @@ if __name__ == '__main__':
     saver = tf.train.Saver()
 
     config = tf.ConfigProto(
-      #  device_count={'GPU': 0}
+        device_count={'GPU': args.use_gpu}
     )
     config.allow_soft_placement = True
     with tf.Session(config=config) as sess:
@@ -107,7 +109,7 @@ if __name__ == '__main__':
         if args.mode == 'train':
             lr = args.learning_rate
             no_improve_count = 0
-            prev_loss = 2000
+            prev_loss = np.inf
 
             for epoch in range(1, args.max_epoch + 1):
 
