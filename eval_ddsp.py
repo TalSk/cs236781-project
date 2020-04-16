@@ -25,7 +25,7 @@ def main():
     parser.add_argument('-bad', '--ddsp_bass_ckpt_dir', type=str, default='./ddsp_bass_ckpt')
     parser.add_argument('-drd', '--ddsp_drums_ckpt_dir', type=str, default='./ddsp_drums_ckpt')
     parser.add_argument('-ld', '--log_dir', type=str, default='./ddsp_log')
-    parser.add_argument('-rd', '--results_dir', type=str, default='./results')
+    parser.add_argument('-rd', '--results_dir', type=str, default='./results/Full model - Same artist - Test')
 
     args = parser.parse_args()
     args.log_file = os.path.join(args.log_dir, 'log.txt')
@@ -78,6 +78,7 @@ def main():
     vocals_ddsp = ddsp.training.models.Autoencoder(name="vocals_ae")
     vocals_ddsp.restore(args.ddsp_vocals_ckpt_dir)
     vocals_gen = vocals_ddsp(audio_features_vocals, training=False)
+    print(vocals_ddsp.count_params())
 
     print("====Resynthesizing bass===")
     gin.clear_config()
@@ -101,7 +102,8 @@ def main():
 
     bass_ddsp = ddsp.training.models.Autoencoder(name="bass_ae")
     bass_ddsp.restore(args.ddsp_bass_ckpt_dir)
-    bass_gen = vocals_ddsp(audio_features_bass, training=False)
+    bass_gen = bass_ddsp(audio_features_bass, training=False)
+    print(bass_ddsp.count_params())
 
     print("====Resynthesizing drums===")
     gin.clear_config()
@@ -125,13 +127,12 @@ def main():
 
     drums_ddsp = ddsp.training.models.Autoencoder(name="drums_ae")
     drums_ddsp.restore(args.ddsp_drums_ckpt_dir)
-    drums_gen = vocals_ddsp(audio_features_drums, training=False)
+    drums_gen = drums_ddsp(audio_features_drums, training=False)
+    print(drums_ddsp.count_params())
 
     print(vocals_gen.shape)
     print(bass_gen.shape)
     print(drums_gen.shape)
-
-    # TODO: Add metrics evaluation.
 
     logger.info("Saving to wav")
     outputToWav(rawOutput=vocals_gen, resultPath=os.path.join(args.results_dir, "sep_vocals.wav"))

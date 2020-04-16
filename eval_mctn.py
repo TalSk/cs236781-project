@@ -50,6 +50,17 @@ def main():
     whole_output = []
     total_loss = 0
 
+    bass_pos = 0
+    drums_pos = 1
+    vocals_pos = 2
+
+    f0_loss_bass = 0
+    f0_loss_drums = 0
+    f0_loss_vocals = 0
+    ld_loss_bass = 0
+    ld_loss_drums = 0
+    ld_loss_vocals = 0
+
     with tfv1.Session(config=config) as sess:
         ckpt = tf.train.get_checkpoint_state(args.mctn_ckpt_dir)
         assert ckpt
@@ -57,29 +68,41 @@ def main():
         mctn.restore(sess, ckpt.model_checkpoint_path)
 
         sess.run(mctn_eval_dataloader.iterator.initializer)
-        i = 0
         while True:
             try:
                 # Pass mixed.wav through the pre-trained MCTN to extract f0 and loudness
-                mctn_loss, mctn_outputs = sess.run(
+                mctn_loss, mctn_outputs, losses = sess.run(
                     fetches=[
-                        infer_model.loss, infer_model.outputs
+                        infer_model.loss, infer_model.outputs, infer_model.losses
                     ])
+
+
                 whole_output += [mctn_outputs]
 
                 logging.info(f'MCTN loss on mixed input: {mctn_loss}')
                 total_loss += mctn_loss
 
-                i += 1
-                # if i == 5:
-                #     break
+                f0_loss_bass += losses[0][bass_pos]
+                f0_loss_drums += losses[0][drums_pos]
+                f0_loss_vocals += losses[0][vocals_pos]
+                ld_loss_bass += losses[1][bass_pos]
+                ld_loss_drums += losses[1][drums_pos]
+                ld_loss_vocals += losses[1][vocals_pos]
+
             except tfv1.errors.OutOfRangeError:
                 logging.info(f'Done aggregating results. Total average loss: {total_loss / len(whole_output)}')
                 break
 
-        bass_pos = 0
-        drums_pos = 1  # TODO: Change
-        vocals_pos = 2
+        logging.info(f"Bass f0 av. loss: {(f0_loss_bass / len(whole_output))}")
+        logging.info(f"Drums f0 av. loss: {(f0_loss_drums / len(whole_output))}")
+        logging.info(f"Vocals f0 av. loss: {(f0_loss_vocals / len(whole_output))}")
+        logging.info(f"Bass ld av. loss: {(ld_loss_bass / len(whole_output))}")
+        logging.info(f"Drums ld av. loss: {(ld_loss_drums / len(whole_output))}")
+        logging.info(f"Vocals ld av. loss: {(ld_loss_vocals / len(whole_output))}")
+        logging.info(f"Bass av. loss: {(0.9 * ld_loss_bass + 0.1 * f0_loss_bass) / len(whole_output)}")
+        logging.info(f"Drums av. loss: {(0.9 * ld_loss_drums + 0.1 * f0_loss_drums) / len(whole_output)}")
+        logging.info(f"Vocals av. loss: {((0.9 * ld_loss_vocals + 0.1 * f0_loss_vocals) / len(whole_output))}")
+        input()  # TODO
 
         # Prepare input to be saved for each of the DDSP autoencoders.
         whole_f0 = []
