@@ -23,6 +23,11 @@ def main():
         print(f"Trimming original audio samples from {original_audio_samples} to {synth_audio_samples}")
         original_audio_samples = synth_audio_samples
         original_audio = original_audio[:original_audio_samples]
+
+    elif original_audio_samples < synth_audio_samples:
+        print(f"Trimming synthesized audio samples from {synth_audio_samples} to {original_audio_samples}")
+        synth_audio_samples = original_audio_samples
+        synth_audio = synth_audio[:synth_audio_samples]
     
     print("Calculating F0 for synthesized audio")
     synth_f0 = spectral_ops.compute_f0(synth_audio, args.sample_rate, args.frame_rate)[0]
