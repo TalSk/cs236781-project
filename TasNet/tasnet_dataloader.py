@@ -70,14 +70,6 @@ class TasNetDataLoader():
                     os.path.join(s3_wav_dir, filename), self.sample_rate)
                 s3_f0 = spectral_ops.compute_f0(s3, self.sample_rate, self.frame_rate)[0]
                 s3_loudness = spectral_ops.compute_loudness(s3, self.sample_rate, self.frame_rate)
-                
-                def padding(inputs):
-                    return np.pad(
-                        inputs, (int(2.55 * self.sample_rate), 0),
-                        'constant',
-                        constant_values=(0, 0))
-
-                # mix, s1, s2 = padding(mix), padding(s1), padding(s2)
 
                 def sample_to_frame(sample_num):
                     return int(self.frame_rate * sample_num / self.sample_rate)
@@ -112,8 +104,6 @@ class TasNetDataLoader():
                 stride = int(4 * self.sample_rate)
                 for i in range(0, now_length - target_length, stride):
                     write(i, i + target_length)
-                # if now_length // target_length:
-                #     write(now_length - target_length, now_length)
 
     def _decode(self, serialized_example):
         example = tf.parse_single_example(
