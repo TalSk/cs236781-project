@@ -1,0 +1,29 @@
+bass
+Trimming original audio samples from 4100358 to 4100352
+Calculating F0 for synthesized audio
+Calculating loudness for synthesized audio
+Calculating F0 for original audio
+Calculating loudness for original audio
+Average F0 L1: 189.22579956054688
+Average Loudness L1: 9.287034051265719
+Average Multi-scale spectrogram loss: 8.176031112670898
+
+drums
+Trimming original audio samples from 4100358 to 4100352
+Calculating F0 for synthesized audio
+Calculating loudness for synthesized audio
+Calculating F0 for original audio
+Calculating loudness for original audio
+Average F0 L1: 55.14624786376953
+Average Loudness L1: 3.5116340179652363
+Average Multi-scale spectrogram loss: 7.687488079071045
+
+vocals
+Trimming original audio samples from 4100358 to 4100352
+Calculating F0 for synthesized audio
+Calculating loudness for synthesized audio
+Calculating F0 for original audio
+Calculating loudness for original audio
+Average F0 L1: 519.3523559570312
+Average Loudness L1: 5.173612259324982
+Average Multi-scale spectrogram loss: 7.617326736450195
