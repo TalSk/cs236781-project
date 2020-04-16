@@ -3,7 +3,6 @@ import logging
 import os
 import sys
 
-import librosa
 import numpy as np
 import tensorflow.compat.v1 as tfv1
 import tensorflow as tf
@@ -122,6 +121,9 @@ def main():
                 allow_pickle=False)
 
         if args.calc_loss == 1:
+            import librosa
+            from ddsp import spectral_ops
+            
             for instrument, audio_features in [("bass", audio_features_bass), ("drums", audio_features_drums), ("vocals", audio_features_vocals)]:
                 original_audio, _ = librosa.load(os.path.join(args.original_sound_dir, f"original_{instrument}.wav"), args.sample_rate)
 
