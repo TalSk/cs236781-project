@@ -25,7 +25,7 @@ def main():
     parser.add_argument('-bad', '--ddsp_bass_ckpt_dir', type=str, default='./ddsp_bass_ckpt')
     parser.add_argument('-drd', '--ddsp_drums_ckpt_dir', type=str, default='./ddsp_drums_ckpt')
     parser.add_argument('-ld', '--log_dir', type=str, default='./ddsp_log')
-    parser.add_argument('-rd', '--results_dir', type=str, default='./results/Full model - Same artist - Test')
+    parser.add_argument('-rd', '--results_dir', type=str, default='./results/Full model - test')
 
     args = parser.parse_args()
     args.log_file = os.path.join(args.log_dir, 'log.txt')

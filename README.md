@@ -17,25 +17,26 @@ eval_ddsp.py that runs an evaluation by passing extracted fundamental frequencie
 # Installation
 Run the following commands to create a conda environment called "ddsp" capable of running our code:
 
-conda create --name ddsp python=3.7
+`conda create --name ddsp python=3.7
 conda activate ddsp
 conda install jupyterlab
 conda install -c conda-forge librosa
-conda install -c conda-forge tqdm
+conda install -c conda-forge tqdm`
 
 libsnd installation:
 For windows:
-conda install -c msys2 m2w64-libsndfile
+`conda install -c msys2 m2w64-libsndfile`
 For linux:
-sudo apt-get install libsndfile-dev
+`sudo apt-get install libsndfile-dev`
 OR
-conda install -c conda-forge libsndfile
+`conda install -c conda-forge libsndfile`
 
-pip install --upgrade pip
+`pip install --upgrade pip
 pip install apache_beam
 sudo apt-get install ffmpeg libavcodec-extra
-pip install --upgrade ddsp
+pip install --upgrade ddsp`
 
+To run the code on a GPU using TensorFlow, drivers from Nvidia needs to be installed
 # Preprocessing & training of the DDSP
 We used the DDSP utility "prepare_tfrecord" which can be run easily after installing DDSP from pip.
 
@@ -43,14 +44,14 @@ To train the DDSP utility "ddsp_run" which can also be run easily after installi
 we used src/training/our_solo_instrumnet.gin as the GIN configuration file.
 
 For example, this is the command line we run on the server for the vocal DDSP decoder training:
-ddsp_run \
+`ddsp_run \
   --mode=train \
   --model_dir=/home/amitz/cs236781/project/trained/vocals/ \
   --gin_file=/home/amitz/cs236781/project/our_solo_instrument.gin \
   --gin_file=datasets/tfrecord.gin \
   --gin_param="TFRecordProvider.file_pattern='/home/amitz/cs236781/project/Dataset/Training/vocals/vocals.tfrecord*'" \
   --gin_param="batch_size=16" \
-  --alsologtostderr
+  --alsologtostderr`
 
 # Preprocessing & training of the MCTN
 The data must be in the following dir structure:
@@ -64,3 +65,14 @@ Run "python ./tasnet_main.py -dd <PATH TO PREPROCESSED DATASET DIR>"
 The script will create the preprocessed data files if they don't exist, and then proceed to training the model.
 
 # Running the entire model
+This is separated to two parts, the first is the run the MCTN model to extract audios:
+`python eval_mctn.py`
+
+This script expects the MCTN checkpoint to be in `./mctn_ckpt` directory and the mixed input tfrecord file to in `./mctn_data/infer.tfr` path.
+It then writes output to `./results` directory - a numpy array to `{vocals, bass, drums}_{f0_hz, loudness_db}.npy` files.
+
+Then, one can pass these extracted values through the pretrained DDSP autoencoders by running
+`python eval_ddsp.py`
+
+This script expects the autoencoders checkpoints to be in the directories `./ddsp_{vocals, bass, drums}_ckpt` containing a gin file with the expected names as can seen in the script.
+It will then output the resynthesized, seperated audio WAV files to the `./results/Full model - test` directory.
