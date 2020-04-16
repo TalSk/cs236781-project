@@ -19,8 +19,6 @@ def main():
     parser.add_argument('-rd', '--results_dir', type=str, default='./results')
     parser.add_argument('-sr', '--sample_rate', type=int, default=16000)
     parser.add_argument('-fr', '--frame_rate', type=int, default=250)
-    parser.add_argument('-cl', '--calc_loss', type=int, default=0)
-    parser.add_argument('-osd', '--original_sound_dir', type=str, default='./results/DDSP - Same artist - Test')
 
     args = parser.parse_args()
     args.log_file = os.path.join(args.log_dir, 'log.txt')
@@ -119,35 +117,6 @@ def main():
                 allow_pickle=False)
         np.save(os.path.join(args.results_dir, 'drums_loudness_db.npy'), sess.run(audio_features_drums['loudness_db']),
                 allow_pickle=False)
-
-        if args.calc_loss == 1:
-            import librosa
-            from ddsp import spectral_ops
-            
-            for instrument, audio_features in [("bass", audio_features_bass), ("drums", audio_features_drums), ("vocals", audio_features_vocals)]:
-                original_audio, _ = librosa.load(os.path.join(args.original_sound_dir, f"original_{instrument}.wav"), args.sample_rate)
-
-                synth_audio_samples = audio_features_vocals["f0_hz"].shape[1] * args.sample_rate // args.frame_rate
-                original_audio_samples = original_audio.shape[0]
-
-                if synth_audio_samples < original_audio_samples:
-                    logging.info(f"Trimming original {instrument} audio samples from {original_audio_samples} to {synth_audio_samples}")
-                    original_audio_samples = synth_audio_samples
-                    original_audio = original_audio[:original_audio_samples]
-
-                # Assuming only 1 batch
-                synth_f0 = audio_features["f0_hz"][0]
-                synth_loudness = audio_features["loudness_db"][0]
-
-                logging.info(f"Calculating F0 for {instrument} original audio")
-                original_f0 = spectral_ops.compute_f0(original_audio, args.sample_rate, args.frame_rate)[0]
-                logging.info(f"Calculating loudness for {instrument} original audio")
-                original_loudness = spectral_ops.compute_loudness(original_audio, args.sample_rate, args.frame_rate)
-
-                f0_l1 = np.mean(abs(synth_f0 - original_f0))
-                loudness_l1 = np.mean(abs(synth_loudness - original_loudness))
-                logging.info(f"Average {instrument} F0 L1: {f0_l1}")
-                logging.info(f"Average {instrument} Loudness L1: {loudness_l1}")
 
 if __name__ == "__main__":
     main()
