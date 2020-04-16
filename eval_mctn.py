@@ -17,6 +17,10 @@ def main():
     parser.add_argument('-md', '--mctn_ckpt_dir', type=str, default='./mctn_ckpt')
     parser.add_argument('-ld', '--log_dir', type=str, default='./mctn_log')
     parser.add_argument('-rd', '--results_dir', type=str, default='./results')
+    parser.add_argument('-sr', '--sample_rate', type=int, default=16000)
+    parser.add_argument('-fr', '--frame_rate', type=int, default=250)
+    parser.add_argument('-cl', '--calc_loss', type=int, default=0)
+    parser.add_argument('-osd', '--original_sound_dir', type=str, default='./results/DDSP - Same artist - Test')
 
     args = parser.parse_args()
     args.log_file = os.path.join(args.log_dir, 'log.txt')
@@ -30,12 +34,12 @@ def main():
     # Expects a file named "infer.tfr" in mctn_data_dir
     with tfv1.variable_scope("model") as scope:
         mctn_eval_dataloader = tasnet_dataloader.TasNetDataLoader("infer", data_dir=args.mctn_data_dir,
-                                                                  batch_size=1, sample_rate=16000,
-                                                                  frame_rate=250)  # TODO: Fill correct values
+                                                                  batch_size=1, sample_rate=args.sample_rate,
+                                                                  frame_rate=args.frame_rate)  # TODO: Fill correct values
 
         infer_model = tasnet_tf.TasNet("infer", mctn_eval_dataloader, n_speaker=3, N=128,
                                        L=64, B=256, H=512, P=3, X=8,
-                                       R=1, sample_rate_hz=16000, frame_rate_hz=250,
+                                       R=1, sample_rate_hz=args.sample_rate, frame_rate_hz=args.frame_rate,
                                        weight_f0=0.1)  # TODO: Fill correct values
 
     # Load pre-trained MCTN
@@ -116,6 +120,31 @@ def main():
         np.save(os.path.join(args.results_dir, 'drums_loudness_db.npy'), sess.run(audio_features_drums['loudness_db']),
                 allow_pickle=False)
 
+        if args.calc_loss == 1:
+            for instrument, audio_features in [("bass", audio_features_bass), ("drums", audio_features_drums), ("vocals", audio_features_vocals)]:
+                original_audio, _ = librosa.load(os.path.join(args.original_sound_dir, f"original_{instrument}.wav"), args.sample_rate)
+
+                synth_audio_samples = audio_features_vocals["f0_hz"].shape[1]
+                original_audio_samples = original_audio.shape[0]
+
+                if synth_audio_samples < original_audio_samples:
+                    logging.info(f"Trimming original {instrument} audio samples from {original_audio_samples} to {synth_audio_samples}")
+                    original_audio_samples = synth_audio_samples
+                    original_audio = original_audio[:original_audio_samples]
+
+                # Assuming only 1 batch
+                synth_f0 = audio_features["f0_hz"][0]
+                synth_loudness = audio_features["loudness_db"][0]
+
+                logging.info(f"Calculating F0 for {instrument} original audio")
+                original_f0 = spectral_ops.compute_f0(original_audio, args.sample_rate, args.frame_rate)[0]
+                logging.info(f"Calculating loudness for {instrument} original audio")
+                original_loudness = spectral_ops.compute_loudness(original_audio, args.sample_rate, args.frame_rate)
+
+                f0_l1 = np.mean(abs(synth_f0 - original_f0))
+                loudness_l1 = np.mean(abs(synth_loudness - original_loudness))
+                logging.info(f"Average {instrument} F0 L1: {f0_l1}")
+                logging.info(f"Average {instrument} Loudness L1: {loudness_l1}")
 
 if __name__ == "__main__":
     main()
