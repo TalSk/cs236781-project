@@ -32,11 +32,13 @@ In this subsection we will detail the structure of our code in the `src/` direct
 # Installation
 Run the following commands to create a conda environment called "ddsp" capable of running our code:
 
-`conda create --name ddsp python=3.7
+```
+conda create --name ddsp python=3.7
 conda activate ddsp
 conda install jupyterlab
 conda install -c conda-forge librosa
-conda install -c conda-forge tqdm`
+conda install -c conda-forge tqdm
+```
 
 ## Environment installation
 
