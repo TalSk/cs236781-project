@@ -6,12 +6,12 @@ from ddsp import spectral_ops
 import tensorflow.compat.v1 as tf
 
 
-def _calc_sdr(s_hat, s):
-    s_target = (tf.tensordot(s, s_hat) * s) / tf.norm(s)
-    e_noice = s_hat - s_target
-    
-    return 10 * tf.log(tf.norm(s_target) / tf.norm(e_noice)) / tf.log(10.0)
 
+def _calc_sdr(s_hat, s):
+    s_target = (tf.reduce_sum(s * s_hat) * s) / tf.norm(s)
+    e_noise = s_hat - s_target
+
+    return 10 * tf.log(tf.norm(s_target) / tf.norm(e_noise)) / tf.log(10.0)
 
 
 def main():
