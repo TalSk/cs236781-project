@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 # import gin
-import ddsp
+import ddsp.training
 
 import numpy as np
 import tensorflow.compat.v1 as tfv1
@@ -61,6 +61,7 @@ def outputToWav(rawOutput, resultPath, sample_rate=16000):
 
 
 def main():
+    tfv1.disable_eager_execution()
     parser = argparse.ArgumentParser(description='Audio Separation Evaluation')
     parser.add_argument('-dd', '--mctn_data_dir', type=str, default='./mctn_data')
     parser.add_argument('-md', '--mctn_ckpt_dir', type=str, default='./mctn_ckpt')
@@ -91,9 +92,10 @@ def main():
                                                                   frame_rate=250)  # TODO: Fill correct values
         layers = get_mctn_model_layers(N=128, B=256, H=512, X=8, R=1, C=3, L=1)  # TODO: Fill correct values
 
-        infer_model = tasnet_tf.TasNet("infer", mctn_eval_dataloader, layers, n_speaker=3, N=128,
+        infer_model = tasnet_tf.TasNet("infer", mctn_eval_dataloader, layers=layers, n_speaker=3, N=128,
                                        L=1, B=256, H=512, P=3, X=8,
-                                       R=1, sample_rate_hz=16000, frame_rate_hz=250)  # TODO: Fill correct values
+                                       R=1, sample_rate_hz=16000, frame_rate_hz=250,
+                                       weight_f0=0.5)  # TODO: Fill correct values
 
     # Load pre-trained MCTN
     mctn = tfv1.train.Saver()
@@ -102,12 +104,16 @@ def main():
     )
     config.allow_soft_placement = True
     with tfv1.Session(config=config) as sess:
-        logging.info('Loading MCTN model from %s', mctn_model_path)
-        mctn.restore(sess, mctn_model_path)
+        ckpt = tf.train.get_checkpoint_state(args.mctn_ckpt_dir)
+        assert ckpt
+        logging.info('Loading MCTN model from %s', ckpt.model_checkpoint_path)
+        mctn.restore(sess, ckpt.model_checkpoint_path)
 
         sess.run(mctn_eval_dataloader.iterator.initializer)
 
         # Pass mixed.wav through the pre-trained MCTN to extract f0 and loudness
+        print("hi")
+        input()
         mctn_loss, mctn_outputs = sess.run(
             fetches=[
                 infer_model.loss, infer_model.outputs
@@ -116,9 +122,9 @@ def main():
         logging.info(f'MCTN loss on mixed input: {mctn_loss}')
 
     # Prepare input to each of the DDSP autoencoders.
-    vocals_pos = 0
-    bass_pos = 1
-    drums_pos = 2  # TODO: Change
+    vocals_pos = 2
+    bass_pos = 0
+    drums_pos = 1  # TODO: Change
 
     audio_features_vocals = {
         'loudness_db': mctn_outputs[1][vocals_pos],
@@ -136,11 +142,11 @@ def main():
     # Load all 3 autoencoders
     # gin_file = os.path.join(args.model_dir, 'operative_config-0.gin')
     # gin.parse_config_file(gin_file)
-    vocals_ddsp = training.models.Autoencoder()
+    vocals_ddsp = ddsp.training.models.Autoencoder()
     vocals_ddsp.restore(args.ddsp_vocals_ckpt_dir)
-    bass_ddsp = training.models.Autoencoder()
+    bass_ddsp = ddsp.training.models.Autoencoder()
     bass_ddsp.restore(args.ddsp_bass_ckpt_dir)
-    drums_ddsp = training.models.Autoencoder()
+    drums_ddsp = ddsp.training.models.Autoencoder()
     drums_ddsp.restore(args.ddsp_drums_ckpt_dir)
 
     # Resynthesize
