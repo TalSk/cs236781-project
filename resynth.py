@@ -59,17 +59,6 @@ def main():
     RESULT_PATH = sys.argv[3]
     print(sys.argv)
 
-    """data_provider = ddsp.training.data.TFRecordProvider(TRAIN_TFRECORD_FILEPATTERN)
-    dataset = data_provider.get_dataset(shuffle=False)
-
-    ds_iter = iter(dataset)
-    try:
-        batch = next(ds_iter)
-    except OutOfRangeError:
-        raise ValueError(
-            'TFRecord contains no examples. Please try re-running the pipeline with '
-            'different audio file(s).')
-"""
     audio = audio_bytes_to_np(open(AUDIO_PATH, "rb").read(),
                                    sample_rate=DEFAULT_SAMPLE_RATE,
                                    normalize_db=None)
@@ -119,13 +108,6 @@ def main():
 
     # Resynthesize audio.
     audio_gen = model(audio_features, training=False)
-    """audio_gen = model(batch, training=False)
-
-    audio = batch['audio']
-    for i in range(100):
-        batch = next(ds_iter)
-        audio = tf.concat([audio, batch['audio']], 0)
-"""
     outputToWav(audio_gen, RESULT_PATH)
 
 if __name__ == "__main__":

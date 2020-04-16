@@ -25,14 +25,14 @@ def print_num_of_trainable_parameters():
 
 def read_log(log_file):
     lines = open(log_file, 'r').read().splitlines()
-    best_sdr = 2000
+    best_loss = 99999
     best_step = 0
     for line in lines:
-        if 'validation SDR' in line:
+        if 'validation loss' in line:
             txt = line.split()
-            sdr = float(txt[3])
-            best_sdr = max([best_sdr, sdr])
-    return best_sdr
+            loss = float(txt[3])
+            best_loss = min([best_loss, loss])
+    return best_loss
 
 
 def setup():
@@ -43,7 +43,6 @@ def setup():
     parser.add_argument('-lrd', '--learning_rate_decrease', type=float, default=0.8)
     parser.add_argument('-ld', '--log_dir', type=str, default='logdir')
     parser.add_argument('-me', '--max_epoch', type=int, default=100)
-    parser.add_argument('-mo', '--mode', type=str, default='train')
     parser.add_argument('-sr', '--sample_rate', type=int, default=16000)
     parser.add_argument('-fr', '--frame_rate', type=int, default=250)
     parser.add_argument('-w', '--weight_f0', type=float, default=0.1)
@@ -63,9 +62,6 @@ def setup():
     args.log_file = os.path.join(args.log_dir, 'log.txt')
     args.arg_file = os.path.join(args.log_dir, 'args.json')
     args.checkpoint_path = os.path.join(args.log_dir, 'model.ckpt')
-
-    if args.mode != 'train':
-        batch_size = 1
 
     if not os.path.isdir(args.log_dir):
         os.makedirs(args.log_dir)

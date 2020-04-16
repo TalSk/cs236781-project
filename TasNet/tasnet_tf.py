@@ -30,16 +30,6 @@ class TasNet:
 
         self._build_graph()
 
-    def _calc_sdr(self, s_hat, s):
-        def norm(x):
-            return tf.reduce_sum(x ** 2, axis=-1, keepdims=True)
-
-        s_target = tf.reduce_sum(
-            s_hat * s, axis=-1, keepdims=True) * s / norm(s)
-        upp = norm(s_target)
-        low = norm(s_hat - s_target)
-        return 10 * tf.log(upp / low) / tf.log(10.0)
-
     def build_layers(self):
         layers = {
             "conv1d_encoder":
@@ -95,7 +85,7 @@ class TasNet:
             # encoded_input: [batch_size, some len, N]
             encoded_input = self.layers["conv1d_encoder"](
                 inputs=tf.expand_dims(input_audio, -1))
-            self.encoded_len = int(4 * self.sample_rate // self.L) # - self.L) // (self.L // 2) + 1
+            self.encoded_len = int(4 * self.sample_rate // self.L)
 
         with tf.variable_scope("bottleneck"):
             # norm_input: [batch_size, some len, N]
@@ -154,21 +144,6 @@ class TasNet:
         if T_TO_F > 1:
             loudness_deconved = [y[:, ::T_TO_F] for y in loudness_deconved]
 
-        # self.outputs = outputs = [
-        #     tf.signal.overlap_and_add(
-        #         signal=sep_output,
-        #         frame_step=self.L // 2,
-        #     ) for sep_output in sep_output_list
-        # ]
-
-        # sdr1 = self._calc_sdr(outputs[0], single_audios[0]) + \
-        #        self._calc_sdr(outputs[1], single_audios[1])
-        #
-        # sdr2 = self._calc_sdr(outputs[1], single_audios[0]) + \
-        #        self._calc_sdr(outputs[0], single_audios[1])
-
-        # sdr = tf.maximum(sdr1, sdr2)
-        # self.loss = tf.reduce_mean(-sdr) / self.C
         probs = [tf.nn.softplus(y) + 1e-3 for y in f0_deconved]
         probs = [prob / tf.reduce_sum(prob, axis=-1, keepdims=True) for prob in probs]
         output_f0s = tf.squeeze(self._compute_f0_hz(probs), axis=-1)
