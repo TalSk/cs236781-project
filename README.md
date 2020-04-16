@@ -69,10 +69,20 @@ For example, this is the command line we run on the server for the vocal DDSP de
 
 # Preprocessing & training of the MCTN
 The data must be in the following dir structure:
-dataset/s1/file1.wav
-dataset/s2/file1.wav
-dataset/s3/file1.wav
-dataset/mix/file1.wav
+dataset/train/s1/file1.wav
+dataset/train/s2/file1.wav
+dataset/train/s3/file1.wav
+dataset/train/mix/file1.wav
+
+dataset/valid/s1/file2.wav
+dataset/valid/s2/file2.wav
+dataset/valid/s3/file2.wav
+dataset/valid/mix/file2.wav
+
+dataset/infer/s1/file3.wav
+dataset/infer/s2/file3.wav
+dataset/infer/s3/file3.wav
+dataset/infer/mix/file3.wav
 Note that the file in every directory that belongs to the same song must have the same filename!
 
 Run `python ./tasnet_main.py -dd <PATH TO PREPROCESSED DATASET DIR>`
