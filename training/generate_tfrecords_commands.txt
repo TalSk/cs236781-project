@@ -1,0 +1,8 @@
+mkdir ../Dataset/training/bass
+ddsp_prepare_tfrecord --input_audio_filepatterns=../Dataset/training/*/bass.wav --output_tfrecord_path=../Dataset/training/bass/bass.tfrecord --num_shards=10 --alsologtostderr
+
+mkdir ../Dataset/training/drums
+ddsp_prepare_tfrecord --input_audio_filepatterns=../Dataset/training/*/drums.wav --output_tfrecord_path=../Dataset/training/drums/drums.tfrecord --num_shards=10 --alsologtostderr
+
+mkdir ../Dataset/training/vocals
+ddsp_prepare_tfrecord --input_audio_filepatterns=../Dataset/training/*/vocals.wav --output_tfrecord_path=../Dataset/training/vocals/vocals.tfrecord --num_shards=10 --alsologtostderr
