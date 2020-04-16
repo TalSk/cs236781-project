@@ -1,18 +1,30 @@
 # Project sources structure 
 
-In this subsection we will detail the structure of our code in the src/ directory: 
+In this subsection we will detail the structure of our code in the `src/` directory: 
 
-The directory ddsp/ contains the code of the DDSP library along with its preprocessor. 
-No changes were done to the original code. 
-TasNet/ contains the code of the MCTN, where the main differences are changes to the decoder, some hyperparameters and general refactoring of the original code (that was originally written for TensorFlow v1). 
-results/ contains the output of all experiments held, with its subdirectories and file names detailing the specific experiment. 
-training/ contains all scripts that were used in the pre-training of the models. 
-our_solo_instrumnet.gin – a base gin file for the DDSP’s autoencoder training. 
-py-sbatch_{bass, drums, vocals} – bash files that were used for training. They ran DDSP autoencoder training using the gin file above, with a path to the relevant .tfrecord file in our dataset directory. 
-py-sbatch_{bass, drums, vocals}_resynth – bash files that were used to resynthesize the relevant instrument using the resynth.py evaluation file. 
-resynth.py that runs an evaluation by passing a single instrument audio file through the pre-trained DDSP autoencoder. 
-eval-mctn.py that runs an evaluation by passing a given audio file through the pre-trained MCTN model. 
-eval_ddsp.py that runs an evaluation by passing extracted fundamental frequencies and loudness of each source (for example, those extracted by the MCTN model) through each of the pre-trained DDSP autoencoders. 
+- The directory `ddsp/` contains the code of the DDSP library along with its preprocessor.  No changes were done to the original code. 
+
+- `TasNet/` contains the code of the MCTN, where the main differences are changes to the decoder, some hyperparameters and general refactoring of the original code (that was originally written for TensorFlow v1). 
+
+- `results/` contains the output of all experiments held, with its subdirectories and file names detailing the specific experiment. 
+
+- `training/` contains all scripts that were used in the pre-training of the models. 
+
+	* `our_solo_instrumnet.gin` – a base gin file for the DDSP’s autoencoder training. 
+
+	* `py-sbatch_{bass, drums, vocals}` – bash files that were used for training. They ran DDSP autoencoder training using the gin file above, with a path to the relevant .tfrecord file in our dataset directory. 
+
+	* `py-sbatch_{bass, drums, vocals}_resynth` – bash files that were used to resynthesize the relevant instrument using the resynth.py evaluation file. 
+
+- `resynth.py` that runs an evaluation by passing a single instrument audio file through the pre-trained DDSP autoencoder. 
+
+- `eval-mctn.py` that runs an evaluation by passing a given audio file through the pre-trained MCTN model. 
+
+- `eval_ddsp.py` that runs an evaluation by passing extracted fundamental frequencies and loudness of each source (for example, those extracted by the MCTN model) through each of the pre-trained DDSP autoencoders. 
+
+- `eval_mctn_f0_loudness.py` that evaluates audio features of the MCTN output.
+
+- `eval_loudness_f0_spectral_sdr` that evaludates audio features of audio files using the DDSP autoencoders.
 
 # Installation
 Run the following commands to create a conda environment called "ddsp" capable of running our code:
@@ -36,8 +48,10 @@ pip install apache_beam
 sudo apt-get install ffmpeg libavcodec-extra
 pip install --upgrade ddsp`
 
-To run the code on a GPU using TensorFlow, drivers from Nvidia needs to be installed
+To run the code on a GPU using TensorFlow, drivers from Nvidia needs to be installed from https://developer.nvidia.com/rdp/cudnn-download
 # Preprocessing & training of the DDSP
+The dataset was taken from https://www.sisec17.audiolabs-erlangen.de/#/dataset (James May, tracks 20, 21, 70 and 71).
+
 We used the DDSP utility "prepare_tfrecord" which can be run easily after installing DDSP from pip.
 
 To train the DDSP utility "ddsp_run" which can also be run easily after installing DDSP from pip
