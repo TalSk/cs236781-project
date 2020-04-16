@@ -1,0 +1,8 @@
+mctn_ckpt/*
+mctn_log/*
+mctn_data/*
+ddsp_log/*
+ddsp_bass_ckpt/*
+ddsp_drums_ckpt/*
+ddsp_vocals_ckpt/*
+TasNet/__pycache__/*
