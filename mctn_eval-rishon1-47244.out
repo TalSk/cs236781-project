@@ -1,0 +1,64 @@
+*** SLURM BATCH JOB 'mctn_eval' STARTING ***
+*** Activating environment ddsp ***
+2020-04-16 16:15:06.513469: W tensorflow/stream_executor/platform/default/dso_loader.cc:55] Could not load dynamic library 'libnvinfer.so.6'; dlerror: libnvinfer.so.6: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/amitz/cs236781/project/libcudnn/usr/lib/x86_64-linux-gnu:/opt/pbis/lib:
+2020-04-16 16:15:06.513632: W tensorflow/stream_executor/platform/default/dso_loader.cc:55] Could not load dynamic library 'libnvinfer_plugin.so.6'; dlerror: libnvinfer_plugin.so.6: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/amitz/cs236781/project/libcudnn/usr/lib/x86_64-linux-gnu:/opt/pbis/lib:
+2020-04-16 16:15:06.513647: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:30] Cannot dlopen some TensorRT libraries. If you would like to use Nvidia GPU with TensorRT, please make sure the missing libraries mentioned above are installed properly.
+Loading data from mctn files
+Trimming original bass audio samples from 4100358 to 4096000
+Calculating F0 for bass original audio
+2020-04-16 16:15:18.451581: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcuda.so.1
+2020-04-16 16:15:22.742845: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1555] Found device 0 with properties: 
+pciBusID: 0000:04:00.0 name: GeForce RTX 2080 Ti computeCapability: 7.5
+coreClock: 1.545GHz coreCount: 68 deviceMemorySize: 10.76GiB deviceMemoryBandwidth: 573.69GiB/s
+2020-04-16 16:15:22.743634: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudart.so.10.1
+2020-04-16 16:15:22.746437: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcublas.so.10
+2020-04-16 16:15:22.748486: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcufft.so.10
+2020-04-16 16:15:22.749086: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcurand.so.10
+2020-04-16 16:15:22.751598: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcusolver.so.10
+2020-04-16 16:15:22.753111: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcusparse.so.10
+2020-04-16 16:15:22.758004: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudnn.so.7
+2020-04-16 16:15:22.759934: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1697] Adding visible gpu devices: 0
+2020-04-16 16:15:22.760274: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2020-04-16 16:15:22.797587: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2100020000 Hz
+2020-04-16 16:15:22.802878: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x55a640788ad0 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-04-16 16:15:22.802917: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+2020-04-16 16:15:22.944576: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x55a640c27c40 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2020-04-16 16:15:22.944631: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): GeForce RTX 2080 Ti, Compute Capability 7.5
+2020-04-16 16:15:22.946515: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1555] Found device 0 with properties: 
+pciBusID: 0000:04:00.0 name: GeForce RTX 2080 Ti computeCapability: 7.5
+coreClock: 1.545GHz coreCount: 68 deviceMemorySize: 10.76GiB deviceMemoryBandwidth: 573.69GiB/s
+2020-04-16 16:15:22.946609: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudart.so.10.1
+2020-04-16 16:15:22.946649: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcublas.so.10
+2020-04-16 16:15:22.946699: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcufft.so.10
+2020-04-16 16:15:22.946734: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcurand.so.10
+2020-04-16 16:15:22.946768: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcusolver.so.10
+2020-04-16 16:15:22.946802: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcusparse.so.10
+2020-04-16 16:15:22.946836: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudnn.so.7
+2020-04-16 16:15:22.950170: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1697] Adding visible gpu devices: 0
+2020-04-16 16:15:22.950259: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudart.so.10.1
+2020-04-16 16:15:22.953641: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1096] Device interconnect StreamExecutor with strength 1 edge matrix:
+2020-04-16 16:15:22.953672: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1102]      0 
+2020-04-16 16:15:22.953686: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] 0:   N 
+2020-04-16 16:15:22.957125: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1241] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 10312 MB memory) -> physical GPU (device: 0, name: GeForce RTX 2080 Ti, pci bus id: 0000:04:00.0, compute capability: 7.5)
+2020-04-16 16:15:25.431243: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcublas.so.10
+2020-04-16 16:15:25.685053: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudnn.so.7
+Calculating loudness for bass original audio
+Average bass F0 L1: 163.3898468017578
+Average bass Loudness L1: 7.811514634595365
+Trimming original drums audio samples from 4100358 to 4096000
+Calculating F0 for drums original audio
+Calculating loudness for drums original audio
+Average drums F0 L1: 94.8117904663086
+Average drums Loudness L1: 10.25120645244902
+Trimming original vocals audio samples from 4100358 to 4096000
+Calculating F0 for vocals original audio
+Calculating loudness for vocals original audio
+Average vocals F0 L1: 430.0521240234375
+Average vocals Loudness L1: 17.978791324460822
+/home/amitz/miniconda3/envs/ddsp/lib/python3.7/site-packages/librosa/core/time_frequency.py:1208: RuntimeWarning: divide by zero encountered in log10
+  - 0.5 * np.log10(f_sq + const[3]))
+/home/amitz/miniconda3/envs/ddsp/lib/python3.7/site-packages/librosa/core/time_frequency.py:1208: RuntimeWarning: divide by zero encountered in log10
+  - 0.5 * np.log10(f_sq + const[3]))
+/home/amitz/miniconda3/envs/ddsp/lib/python3.7/site-packages/librosa/core/time_frequency.py:1208: RuntimeWarning: divide by zero encountered in log10
+  - 0.5 * np.log10(f_sq + const[3]))
+*** SLURM BATCH JOB 'mctn_eval' DONE ***
