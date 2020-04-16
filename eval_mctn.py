@@ -127,7 +127,7 @@ def main():
             for instrument, audio_features in [("bass", audio_features_bass), ("drums", audio_features_drums), ("vocals", audio_features_vocals)]:
                 original_audio, _ = librosa.load(os.path.join(args.original_sound_dir, f"original_{instrument}.wav"), args.sample_rate)
 
-                synth_audio_samples = audio_features_vocals["f0_hz"].shape[1]
+                synth_audio_samples = audio_features_vocals["f0_hz"].shape[1] * args.sample_rate // args.frame_rate
                 original_audio_samples = original_audio.shape[0]
 
                 if synth_audio_samples < original_audio_samples:
