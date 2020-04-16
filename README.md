@@ -61,7 +61,7 @@ dataset/s3/file1.wav
 dataset/mix/file1.wav
 Note that the file in every directory that belongs to the same song must have the same filename!
 
-Run "python ./tasnet_main.py -dd <PATH TO PREPROCESSED DATASET DIR>"
+Run `python ./tasnet_main.py -dd <PATH TO PREPROCESSED DATASET DIR>`
 The script will create the preprocessed data files if they don't exist, and then proceed to training the model.
 
 # Running the entire model
