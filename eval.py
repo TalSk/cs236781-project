@@ -12,44 +12,6 @@ import tensorflow as tf
 from scipy.io import wavfile
 from TasNet import tasnet_tf, tasnet_dataloader
 
-
-def get_mctn_model_layers(N, L, B, C, R, X, H):
-    layers = {
-        "conv1d_encoder":
-            tfv1.keras.layers.Conv1D(
-                filters=N,
-                kernel_size=L,
-                strides=L,
-                activation=tfv1.nn.relu,
-                name="encode_conv1d"),
-        "bottleneck":
-            tfv1.keras.layers.Conv1D(B, 1, 1),
-        "1d_deconv":
-            tfv1.keras.layers.Dense(L, use_bias=False),
-        "f0_deconv": tfv1.keras.Sequential((tfv1.keras.layers.Dense(2 * N, activation="relu", use_bias=False),
-                                            tfv1.keras.layers.Dense(2 * N, activation="relu", use_bias=False),
-                                            tfv1.keras.layers.Dense(128, activation="relu", use_bias=False))),
-        "loudness_deconv": tfv1.keras.Sequential((tfv1.keras.layers.Dense(2 * N, use_bias=False),
-                                                  tfv1.keras.layers.Dense(2 * N, use_bias=False),
-                                                  tfv1.keras.layers.Dense(1, use_bias=False)))
-    }
-    for i in range(C):
-        layers["1x1_conv_decoder_{}".format(i)] = \
-            tfv1.keras.layers.Conv1D(N, 1, 1)
-    for r in range(R):
-        for x in range(X):
-            now_block = "block_{}_{}_".format(r, x)
-            layers[now_block + "first_1x1_conv"] = tfv1.keras.layers.Conv1D(
-                filters=H, kernel_size=1)
-            layers[now_block + "first_PReLU"] = tfv1.keras.layers.PReLU(
-                shared_axes=[1])
-            layers[now_block + "second_PReLU"] = tfv1.keras.layers.PReLU(
-                shared_axes=[1])
-            layers[now_block + "second_1x1_conv"] = tfv1.keras.layers.Conv1D(
-                filters=B, kernel_size=1)
-    return layers
-
-
 def outputToWav(rawOutput, resultPath, sample_rate=16000):
     if len(rawOutput.shape) == 2:
         rawOutput = rawOutput[0]
@@ -90,12 +52,12 @@ def main():
         mctn_eval_dataloader = tasnet_dataloader.TasNetDataLoader("infer", data_dir=args.mctn_data_dir,
                                                                   batch_size=2, sample_rate=16000,
                                                                   frame_rate=250)  # TODO: Fill correct values
-        layers = get_mctn_model_layers(N=128, B=256, H=512, X=8, R=1, C=3, L=1)  # TODO: Fill correct values
 
-        infer_model = tasnet_tf.TasNet("infer", mctn_eval_dataloader, layers=layers, n_speaker=3, N=128,
-                                       L=1, B=256, H=512, P=3, X=8,
+        infer_model = tasnet_tf.TasNet("infer", mctn_eval_dataloader, n_speaker=3, N=128,
+                                       L=64, B=256, H=512, P=3, X=8,
                                        R=1, sample_rate_hz=16000, frame_rate_hz=250,
-                                       weight_f0=0.5)  # TODO: Fill correct values
+                                       weight_f0=0.1)  # TODO: Fill correct values
+        
 
     # Load pre-trained MCTN
     mctn = tfv1.train.Saver()
@@ -122,9 +84,9 @@ def main():
         logging.info(f'MCTN loss on mixed input: {mctn_loss}')
 
     # Prepare input to each of the DDSP autoencoders.
-    vocals_pos = 2
     bass_pos = 0
     drums_pos = 1  # TODO: Change
+    vocals_pos = 2
 
     audio_features_vocals = {
         'loudness_db': mctn_outputs[1][vocals_pos],
