@@ -1,3 +1,6 @@
+# Audio samples
+All audio samples referenced in the project document can be accessed via [our GitHub](https://github.com/TalSk/cs236781-project) under `src/results` directory.
+
 # Project sources structure 
 
 In this subsection we will detail the structure of our code in the `src/` directory: 
