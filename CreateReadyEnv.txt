@@ -1,11 +1,13 @@
 conda create --name ddsp python=3.7
 conda activate ddsp
 conda install jupyterlab
+conda install -c conda-forge librosa
+conda install -c conda-forge tqdm
 
-# libsnd installation:
-# For windows:
+libsnd installation:
+For windows:
 conda install -c msys2 m2w64-libsndfile
-# For linux:
+For linux:
 sudo apt-get install libsndfile-dev
 OR
 conda install -c conda-forge libsndfile
