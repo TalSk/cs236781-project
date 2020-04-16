@@ -42,6 +42,16 @@ We used the DDSP utility "prepare_tfrecord" which can be run easily after instal
 To train the DDSP utility "ddsp_run" which can also be run easily after installing DDSP from pip
 we used src/training/our_solo_instrumnet.gin as the GIN configuration file.
 
+For example, this is the command line we run on the server for the vocal DDSP decoder training:
+ddsp_run \
+  --mode=train \
+  --model_dir=/home/amitz/cs236781/project/trained/vocals/ \
+  --gin_file=/home/amitz/cs236781/project/our_solo_instrument.gin \
+  --gin_file=datasets/tfrecord.gin \
+  --gin_param="TFRecordProvider.file_pattern='/home/amitz/cs236781/project/Dataset/Training/vocals/vocals.tfrecord*'" \
+  --gin_param="batch_size=16" \
+  --alsologtostderr
+
 # Preprocessing & training of the MCTN
 The data must be in the following dir structure:
 dataset/s1/file1.wav
