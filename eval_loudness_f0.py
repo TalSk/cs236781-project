@@ -27,24 +27,14 @@ def main():
     print("Calculating loudness for synthesized audio")
     synth_loudness = spectral_ops.compute_loudness(synth_audio, args.sample_rate, args.frame_rate)
 
-    avg_synth_f0 = np.mean(synth_f0)
-    avg_synth_loudness = np.mean(synth_loudness)
-    print(f"Average F0 of synth file: {avg_synth_f0}")
-    print(f"Average Loudness of synth file: {avg_synth_loudness}")
-
     print("Calculating F0 for original audio")
     original_f0 = spectral_ops.compute_f0(original_audio, args.sample_rate, args.frame_rate)[0]
     print("Calculating loudness for original audio")
     original_loudness = spectral_ops.compute_loudness(original_audio, args.sample_rate, args.frame_rate)
 
-    avg_original_f0 = np.mean(original_f0)
-    avg_original_loudness = np.mean(original_loudness)
-    print(f"Average F0 of original file: {avg_original_f0}")
-    print(f"Average Loudness of original file: {avg_original_loudness}")
+    f0_l1 = np.mean(abs(synth_f0 - original_f0))
+    loudness_l1 = np.mean(abs(synth_loudness - original_loudness))
 
-
-    f0_l1 = abs(avg_synth_f0 - avg_original_f0)
-    loudness_l1 = abs(avg_synth_loudness - avg_original_loudness)
     print(f"Average F0 L1: {f0_l1}")
     print(f"Average Loudness L1: {loudness_l1}")
 
