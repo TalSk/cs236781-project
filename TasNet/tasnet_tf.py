@@ -23,7 +23,7 @@ class TasNet:
 
         self.dtype = tf.float32
 
-        if layers == None:
+        if layers is None:
             self.layers = self.build_layers()
         else:
             self.layers = layers
